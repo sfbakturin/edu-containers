@@ -1,0 +1,26 @@
+name: Build Docker images
+
+on: push
+
+jobs:
+  build:
+    name: "Building with ${{matrix.compiler.name}}"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        compiler:
+        - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
+
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_BASENAME: educpp
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build docker image
+        run: docker build . --tag "educpp:${{matrix.compiler.cc}}${{matrix.compiler.version}}" \ 
+                            --build-arg COMPILER_NAME=${{matrix.compiler.cc}} \
+                            --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} \
+                            --build-arg COMPILER_VERSION=${{matrix.compiler.version}}
