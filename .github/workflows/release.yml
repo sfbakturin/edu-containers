@@ -14,6 +14,11 @@ jobs:
           - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
           - {name: Clang 16, cc: clang, cxx: clang++, version: 16}
           - {name: Clang 15, cc: clang, cxx: clang++, version: 15}
+          - {name: GCC 13, cc: gcc, cxx: g++, version: 13}
+          - {name: GCC 12, cc: gcc, cxx: g++, version: 12}
+          - {name: GCC 11, cc: gcc, cxx: g++, version: 11}
+          - {name: GCC 10, cc: gcc, cxx: g++, version: 10}
+          - {name: GCC 9, cc: gcc, cxx: g++, version: 9}
 
     runs-on: ubuntu-latest
 
