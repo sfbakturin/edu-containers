@@ -10,5 +10,6 @@ PACKAGES+=(make)
 PACKAGES+=(git)
 PACKAGES+=(pkg-config)
 PACKAGES+=(cmake)
+PACKAGES+=(tar)
 
 apt-get install -y --no-install-recommends "${PACKAGES[@]}"

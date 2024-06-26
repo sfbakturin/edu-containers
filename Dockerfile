@@ -26,6 +26,14 @@ RUN bash install-zlib.sh && rm install-zlib.sh
 COPY installers/install-gtest.sh .
 RUN bash install-gtest.sh && rm install-gtest.sh
 
+# Install FFMPEG.
+COPY installers/install-ffmpeg.sh .
+RUN bash install-ffmpeg.sh && rm install-ffmpeg.sh
+
+# Install FFTW.
+COPY installers/install-fftw.sh .
+RUN bash install-fftw.sh && rm install-fftw.sh
+
 # Cleanup.
 RUN apt-get autoremove -y --purge && apt-get autoclean
 
