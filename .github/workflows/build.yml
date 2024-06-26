@@ -4,7 +4,7 @@ on: push
 
 jobs:
   build:
-    name: "Building image with ${{matrix.compiler.name}}"
+    name: "Building and publishing image with ${{matrix.compiler.name}}"
 
     strategy:
       fail-fast: true
@@ -18,9 +18,16 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_BASENAME: educpp
+      IMAGE_BASENAME: educontainer
 
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build --tag "educpp:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
+        run: docker build --tag "${{github.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ github.HUB_USERNAME }}
+          password: ${{ secrets.HUB_PASSWORD }}
+      - name: Publish to Docker Hub
+        run: docker push "${{github.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}"
