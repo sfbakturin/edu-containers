@@ -23,11 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build --tag "${{github.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
+        run: docker build --tag "${{env.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ github.HUB_USERNAME }}
+          username: ${{ env.HUB_USERNAME }}
           password: ${{ secrets.HUB_PASSWORD }}
       - name: Publish to Docker Hub
-        run: docker push "${{github.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}"
+        run: docker push "${{env.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}"
