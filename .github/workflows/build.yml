@@ -10,7 +10,10 @@ jobs:
       fail-fast: true
       matrix:
         compiler:
-        - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
+          - {name: Clang 18, cc: clang, cxx: clang++, version: 18}
+          - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
+          - {name: Clang 16, cc: clang, cxx: clang++, version: 16}
+          - {name: Clang 15, cc: clang, cxx: clang++, version: 15}
 
     runs-on: ubuntu-latest
 
