@@ -5,6 +5,7 @@ ARG COMPILER_NAMEXX
 ARG COMPILER_VERSION
 
 ENV EDU_THIRDPARTY=/thirdparty
+ENV EDU_STUDENT=/student
 
 # Update system.
 RUN apt-get update && apt-get upgrade -y
@@ -55,5 +56,5 @@ RUN bash install-fftw.sh && rm install-fftw.sh
 # Cleanup.
 RUN apt-get autoremove -y --purge && apt-get autoclean
 
-# Setup for student.
-WORKDIR /student
+# Student start-point.
+WORKDIR ${EDU_STUDENT}
