@@ -25,4 +25,4 @@ jobs:
             --tag "educpp:${{matrix.compiler.cc}}${{matrix.compiler.version}}" \ 
             --build-arg COMPILER_NAME=${{matrix.compiler.cc}} \
             --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} \
-            --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
+            --build-arg COMPILER_VERSION=${{matrix.compiler.version}}
