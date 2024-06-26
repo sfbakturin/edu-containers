@@ -1,0 +1,26 @@
+name: Build and test Docker images
+
+on: push
+
+jobs:
+  buildtest:
+    name: "Building and testing image (${{matrix.compiler.name}})"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        compiler:
+          - {name: Clang 18, cc: clang, cxx: clang++, version: 18}
+          - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
+          - {name: Clang 16, cc: clang, cxx: clang++, version: 16}
+          - {name: Clang 15, cc: clang, cxx: clang++, version: 15}
+
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_BASENAME: educontainer
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build --tag "${{vars.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
