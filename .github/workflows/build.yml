@@ -1,10 +1,10 @@
-name: Build Docker images
+name: Build and publish Docker images
 
-on: push
+on: workflow_dispatch
 
 jobs:
   build:
-    name: "Building and publishing image with ${{matrix.compiler.name}}"
+    name: "Building and publishing image (${{matrix.compiler.name}})"
 
     strategy:
       fail-fast: true
