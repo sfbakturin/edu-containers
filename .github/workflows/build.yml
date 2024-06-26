@@ -20,8 +20,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: | 
-          docker build --tag "educpp:${{matrix.compiler.cc}}${{matrix.compiler.version}}" \ 
-            --build-arg COMPILER_NAME=${{matrix.compiler.cc}} \
-            --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} \
-            --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
+        run: docker build --tag "educpp:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
