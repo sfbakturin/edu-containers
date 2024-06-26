@@ -1,15 +1,6 @@
 #!/bin/bash
 
-PACKAGES=()
+set -euo pipefail
 
-PACKAGES+=(wget)
-PACKAGES+=(lsb-release)
-PACKAGES+=(software-properties-common)
-PACKAGES+=(gnupg)
-PACKAGES+=(make)
-PACKAGES+=(git)
-PACKAGES+=(pkg-config)
-PACKAGES+=(cmake)
-PACKAGES+=(tar)
-
-apt-get install -y --no-install-recommends "${PACKAGES[@]}"
+# Install all basic utils.
+apt-get install -y --no-install-recommends wget lsb-release software-properties-common gnupg make git pkg-config cmake tar
