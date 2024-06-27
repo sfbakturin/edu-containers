@@ -53,6 +53,22 @@ ENV EDU_FFTW_LIBRARY=${EDU_FFTW}/lib
 COPY installers/install-fftw.sh .
 RUN bash install-fftw.sh && rm install-fftw.sh
 
+# Install libdeflate.
+ENV EDU_LIBDEFLATE=${EDU_THIRDPARTY}/libdeflate
+ENV EDU_LIBDEFLATE_INCLUDE=${EDU_LIBDEFLATE}/include
+ENV EDU_LIBDEFLATE_LIBRARY=${EDU_LIBDEFLATE}/lib
+
+COPY installers/install-libdeflate.sh .
+RUN bash install-libdeflate.sh && rm install-libdeflate.sh
+
+# Install isa-l.
+ENV EDU_ISAL=${EDU_THIRDPARTY}/isal
+ENV EDU_ISAL_INCLUDE=${EDU_ISAL}/include
+ENV EDU_ISAL_LIBRARY=${EDU_ISAL}/lib
+
+COPY installers/install-isal.sh .
+RUN bash install-isal.sh && rm install-isal.sh
+
 # Cleanup.
 RUN apt-get autoremove -y --purge && apt-get autoclean
 
