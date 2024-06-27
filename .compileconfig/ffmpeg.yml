@@ -1,0 +1,3 @@
+name: FFmpeg
+includedir: EDU_FFMPEG_INCLUDE
+librarydir: EDU_FFMPEG_LIBRARY

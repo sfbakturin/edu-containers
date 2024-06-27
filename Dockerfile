@@ -30,9 +30,9 @@ COPY installers/install-zlib.sh .
 RUN bash install-zlib.sh && rm install-zlib.sh
 
 # Install GoogleTest.
-ENV EDU_GTEST=${EDU_THIRDPARTY}/googletest
-ENV EDU_GTEST_INCLUDE=${EDU_GTEST}/include
-ENV EDU_GTEST_LIBRARY=${EDU_GTEST}/lib
+ENV EDU_GOOGLETEST=${EDU_THIRDPARTY}/googletest
+ENV EDU_GOOGLETEST_INCLUDE=${EDU_GOOGLETEST}/include
+ENV EDU_GOOGLETEST_LIBRARY=${EDU_GOOGLETEST}/lib
 
 COPY installers/install-gtest.sh .
 RUN bash install-gtest.sh && rm install-gtest.sh
@@ -58,3 +58,8 @@ RUN apt-get autoremove -y --purge && apt-get autoclean
 
 # Student start-point.
 WORKDIR ${EDU_STUDENT}
+
+# Compiler file and default configs.
+COPY compile.py .
+RUN chmod +x compile.py
+COPY .compileconfig/ .compileconfig/

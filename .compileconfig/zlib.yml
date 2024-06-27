@@ -1,0 +1,3 @@
+name: zlib
+includedir: EDU_ZLIB_INCLUDE
+librarydir: EDU_ZLIB_LIBRARY
