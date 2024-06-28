@@ -1,21 +1,23 @@
 #!/bin/bash
 
-echo "Build and test with AddressSanitizer."
-cc -Wall -Wextra -Wpedantic -O0 -ggdb -fno-sanitize-recover=all -fsanitize=address fail_asan.c -o fail_asan.exe &> build_asan.log
-./fail_asan.exe || echo "Found issue with AddressSanitizer."
+echo "Hello World on C"
+cp tests/test_helloworld.c .
+python3 compile.py --name=hello_world.exe --build-type=Release
+rm test_helloworld.c
+./hello_world.exe
 
-echo "Build and test with LeakSanitizer."
-cc -Wall -Wextra -Wpedantic -O0 -ggdb -fno-sanitize-recover=all -fsanitize=leak fail_lsan.c -o fail_lsan.exe &> build_lsan.log
-./fail_lsan.exe || echo "Found issue with LeakSanitizer."
+echo "=============================="
 
-echo "Build and test with ThreadSanitizer."
-cc -Wall -Wextra -Wpedantic -O0 -ggdb -fno-sanitize-recover=all -fsanitize=thread fail_tsan.c -o fail_tsan.exe &> build_tsan.log
-./fail_tsan.exe || echo "Found issue with ThreadSanitizer."
+echo "Hello World on C++"
+cp tests/test_helloworld.cpp .
+python3 compile.py --name=hello_world2.exe --build-type=Release
+rm test_helloworld.cpp
+./hello_world2.exe
 
-echo "Build and test with UndefinedBehaviorSanitizer."
-cc -Wall -Wextra -Wpedantic -O0 -ggdb -fno-sanitize-recover=all -fsanitize=undefined fail_ubsan.c -o fail_ubsan.exe &> build_ubsan.log
-./fail_ubsan.exe || echo "Found issue with UndefinedBehaviorSanitizer."
+echo "=============================="
 
-echo "Build and test Hello World."
-cc -Wall -Wextra -Wpedantic -O0 -ggdb -fno-sanitize-recover=all -fsanitize=leak,address,undefined hello_world.c -o hello_world.exe &> build_helloworld.log
-./hello_world.exe || echo "This report should not be created..."
+echo "Basic GoogleTest"
+cp tests/test_googletest.cpp .
+python3 compile.py --name=google.exe --build-type=Release --include-libraries=GoogleTest --link-libraries=gtest
+rm test_googletest.cpp
+./google.exe

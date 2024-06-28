@@ -30,4 +30,7 @@ jobs:
       - name: Build Docker image
         run: docker build --tag "${{vars.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
       - name: Test Docker image
-        run: docker run --volume "$GITHUB_WORKSPACE/testing:/testing" --workdir /testing "${{vars.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" bash test.sh
+        run: |
+          docker run -t -d --name testing "${{vars.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}"
+          docker cp testing/. testing:/student
+          docker exec testing bash test.sh
