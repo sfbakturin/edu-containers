@@ -23,16 +23,17 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_BASENAME: educontainer
+      IMAGE_NAME: "${{vars.HUB_USERNAME}}/educontainer"
+      IMAGE_TAG: "${{matrix.compiler.cc}}${{matrix.compiler.version}}"
 
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build --tag "${{vars.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
+        run: docker build --tag "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} .
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.HUB_USERNAME }}
-          password: ${{ secrets.HUB_PASSWORD }}
+          username: ${{vars.HUB_USERNAME}}
+          password: ${{secrets.HUB_PASSWORD}}
       - name: Publish to Docker Hub
-        run: docker push "${{vars.HUB_USERNAME}}/${{env.IMAGE_BASENAME}}:${{matrix.compiler.cc}}${{matrix.compiler.version}}"
+        run: docker push "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"
