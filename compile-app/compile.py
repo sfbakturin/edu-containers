@@ -5,7 +5,10 @@ import yaml
 
 from typing import List, Dict
 
-## Utils.
+# compile .py is a utility script created exclusively for `edu-containers` (https://github.com/sfbakturin/edu-containers)
+# that generates and runs the compile command.
+
+# Utils.
 
 class CMDElement:
 	def __init__(self, x: str):
@@ -66,6 +69,7 @@ class CCBuilder:
 		self.__CCBuilder_bt_flags = []
 		self.__CCBuilder_san_flags = []
 		self.__CCBuilder_warn_flags = ["-Wall", "-Wextra", "-Wpedantic"]
+		self.__CCBuilder_comp_flags =[]
 		self.__CCBuilder_inc_flags = []
 		self.__CCBuilder_src_flags = []
 		self.__CCBuilder_lib_flags = []
@@ -86,24 +90,30 @@ class CCBuilder:
 	def set_standard(self, std: str):
 		self.__CCBuilder_std_flags = ["--std=" + std]
 
+	def add_compile_flag(self, flag: str):
+		self.__CCBuilder_comp_flags.append("-" + flag)
+
+	def add_link_flag(self, flag: str):
+		self.__CCBuilder_ld_flags.append("-" + flag)
+
 	def include_headers(self, path_include: str, is_library: bool):
 		if is_library:
 			self.__CCBuilder_inc_flags.append("-isystem")
 		else:
 			self.__CCBuilder_inc_flags.append("-I")
 		if not os.path.exists(path_include):
-			raise ValueError("Provided path \"%s\" is not exists" % (path_include))
+			raise ValueError("Provided path for including headers \"%s\" is not exists" % (path_include))
 		self.__CCBuilder_inc_flags.append(path_include)
 
 	def add_library(self, path_include: str):
 		if not os.path.exists(path_include):
-			raise ValueError("Provided path \"%s\" is not exists" % (path_include))
+			raise ValueError("Provided path for including libraries \"%s\" is not exists" % (path_include))
 		self.__CCBuilder_lib_flags.append("-L")
 		self.__CCBuilder_lib_flags.append(path_include)
 
 	def add_source(self, path_source: str):
 		if not os.path.exists(path_source):
-			raise ValueError("Provided path \"%s\" is not exists" % (path_source))
+			raise ValueError("Source \"%s\" is not exists" % (path_source))
 		self.__CCBuilder_src_flags.append(path_source)
 
 	def add_sources(self, path_sources: List[str]):
@@ -125,13 +135,16 @@ class CCBuilder:
 			cmd += self.__CCBuilder_std_flags
 
 		if len(self.__CCBuilder_bt_flags) == 0:
-			raise ValueError("Command for compiling should be provided by buildtype")
+			raise ValueError("Command for compiling should be provided by build-type")
 		cmd += self.__CCBuilder_bt_flags
 
 		if len(self.__CCBuilder_san_flags) != 0:
 			cmd += self.__CCBuilder_san_flags
 
 		cmd += self.__CCBuilder_warn_flags
+
+		if len(self.__CCBuilder_comp_flags) != 0:
+			cmd += self.__CCBuilder_comp_flags
 
 		if len(self.__CCBuilder_inc_flags):
 			cmd += self.__CCBuilder_inc_flags
@@ -153,24 +166,32 @@ class CCBuilder:
 
 		return cmd
 
-## Compile script.
+# Compile script.
 
 DIRNAME_COMPILE_CONFIGS = ".compileconfig"
 
 libs: Dict[str, Library] = {}
 
-### Find and load compile script configs.
+## Find and load compile script configs.
 
-if not os.path.exists(DIRNAME_COMPILE_CONFIGS):
+parent = None
+
+for d in [".", os.path.expanduser("~")]:
+	p = os.path.join(d, DIRNAME_COMPILE_CONFIGS)
+	if os.path.exists(p):
+		parent = p
+		break
+
+if parent is None:
 	print("[WARN] No %s directory found, no libraries loaded." % (DIRNAME_COMPILE_CONFIGS))
 else:
-	for f in os.listdir(DIRNAME_COMPILE_CONFIGS):
-		p = os.path.join(DIRNAME_COMPILE_CONFIGS, f)
+	for f in os.listdir(parent):
+		p = os.path.join(parent, f)
 		stream = open(p, "r")
 		lib = Library(yaml.safe_load(stream))
 		libs[lib.name()] = lib
 
-### Find sources.
+## Find sources.
 
 sources = []
 is_cxx = False
@@ -186,41 +207,19 @@ for d in [".", "src"]:
 		elif p.endswith(".c") or p.endswith(".cc"):
 			sources.append(p)
 
-### Build command.
+## Build command.
 
 cc = CCBuilder(is_cxx)
-
-def include_library(arr: List[str]):
-	global cc
-
-	if len(arr) != 1:
-		raise ValueError("For include-library flag there's should be exactly one value")
-
-	a = arr[0]
-
-	if not a in libs:
-		raise ValueError("Library %s no found" % (a))
-
-	cc.add_library(libs[a].librarydir())
-	cc.include_headers(libs[a].includedir(), True)
 
 def include_libraries(arr: List[str]):
 	global cc
 
 	for a in arr:
 		if not a in libs:
-			raise ValueError("Library %s no found" % (a))
+			raise ValueError("Library \"%s\" no found in loader" % (a))
 
 		cc.add_library(libs[a].librarydir())
 		cc.include_headers(libs[a].includedir(), True)
-
-def link_library(arr: List[str]):
-	global cc
-
-	if len(arr) != 1:
-		raise ValueError("For link-library flag there's should be exactly one value")
-
-	cc.link_library(arr[0])
 
 def link_libraries(arr: List[str]):
 	global cc
@@ -234,13 +233,13 @@ def build_type(arr: List[str]):
 	if len(arr) != 1:
 		raise ValueError("For build-type flag there's should be exactly one value")
 
-	a = arr[0]
+	a = arr[0].lower()
 	if a == "release":
 		cc.set_release()
 	elif a == "debug":
 		cc.set_debug()
 	else:
-		raise ValueError("Unsupported buildtype (%s) found" % (a))
+		raise ValueError("Unsupported build-type (\"%s\") found" % (a))
 
 def use_sanitizer(arr: List[str]):
 	global cc
@@ -266,34 +265,38 @@ def set_standard(arr: List[str]):
 
 	cc.set_standard(arr[0])
 
+def add_compile_flags(arr: List[str]):
+	global cc
+
+	for a in arr:
+		cc.add_compile_flag(a)
+
+def add_linkage_flags(arr: List[str]):
+	global cc
+
+	for a in arr:
+		cc.add_link_flag(a)
+
 for i in range(1, len(sys.argv)):
 	arg = CMDElement(sys.argv[i])
 	flag = arg.get_flag()
 	vals = arg.get_values()
-	if flag == "include-library":
-		include_library(vals)
-	elif flag == "include-libraries":
-		include_libraries(vals)
-	elif flag == "link-library":
-		link_library(vals)
-	elif flag == "link-libraries":
-		link_libraries(vals)
-	elif flag == "build-type":
-		build_type(vals)
-	elif flag == "use-sanitizer":
-		use_sanitizer(vals)
-	elif flag == "name":
-		set_name(vals)
-	elif flag == "std":
-		set_standard(vals)
-	else:
-		raise AttributeError("Flag \"%s\" not supported" % (arg.get_flag()))
+	match flag:
+		case "include-libraries": include_libraries(vals)
+		case "link-libraries": link_libraries(vals)
+		case "build-type": build_type(vals)
+		case "use-sanitizer": use_sanitizer(vals)
+		case "name": set_name(vals)
+		case "std": set_standard(vals)
+		case "add-compile-flags": add_compile_flags(vals)
+		case "add-linkage-flags": add_linkage_flags(vals)
+		case _: raise NotImplementedError("Flag \"%s\" is not supported" % (flag))
 
 cc.add_sources(sources)
 if os.path.exists("include"):
 	cc.include_headers("include", False)
 
-### Run compilation.
+## Run compilation.
 
 print(" ".join(cc.get_command()))
 subprocess.run(cc.get_command())

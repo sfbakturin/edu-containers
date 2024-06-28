@@ -70,12 +70,12 @@ COPY installers/install-isal.sh .
 RUN bash install-isal.sh && rm install-isal.sh
 
 # Cleanup.
-RUN apt-get autoremove -y --purge && apt-get autoclean
+COPY installers/install-cleanup.sh .
+RUN bash install-cleanup.sh && rm install-cleanup.sh
 
 # Student start-point.
 WORKDIR ${EDU_STUDENT}
 
 # Compiler file and default configs.
-COPY compile.py .
+COPY compile-app/ .
 RUN chmod +x compile.py
-COPY .compileconfig/ .compileconfig/
