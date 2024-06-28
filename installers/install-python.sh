@@ -6,4 +6,4 @@ set -euo pipefail
 apt-get install --no-install-recommends -y python3-pip
 
 # PyYAML library.
-pip3 install yaml
+pip3 install pyyaml
