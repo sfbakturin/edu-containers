@@ -14,6 +14,10 @@ RUN apt-get update && apt-get upgrade -y
 COPY installers/install-base.sh .
 RUN bash install-base.sh && rm install-base.sh
 
+# Install python utils and libraries.
+COPY installers/install-python.sh .
+RUN bash install-python.sh && rm install-python.sh
+
 # Install C/C++ compiler.
 COPY installers/install-${COMPILER_NAME}.sh .
 RUN bash install-${COMPILER_NAME}.sh && rm install-${COMPILER_NAME}.sh
