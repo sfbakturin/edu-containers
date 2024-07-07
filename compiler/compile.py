@@ -5,7 +5,7 @@ import yaml
 
 from typing import List, Dict
 
-# compile .py is a utility script created exclusively for `edu-containers` (https://github.com/sfbakturin/edu-containers)
+# compile.py is a utility script created exclusively for `edu-containers` (https://github.com/sfbakturin/edu-containers)
 # that generates and runs the compile command.
 
 # Utils.
