@@ -19,6 +19,9 @@ COPY installers/install-python.sh .
 RUN bash install-python.sh && rm install-python.sh
 
 # Install C/C++ compiler.
+ENV CC=${COMPILER_NAME}-${COMPILER_VERSION}
+ENV CXX=${COMPILER_NAMEXX}-${COMPILER_VERSION}
+
 COPY installers/install-${COMPILER_NAME}.sh .
 RUN bash install-${COMPILER_NAME}.sh && rm install-${COMPILER_NAME}.sh
 

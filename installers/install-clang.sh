@@ -15,3 +15,6 @@ rm "${LLVM_INSTALL_SCRIPT}"
 # Link standard CC and CXX to clang.
 ln -sf /usr/bin/clang-"${COMPILER_VERSION}" /usr/bin/cc
 ln -sf /usr/bin/clang++-"${COMPILER_VERSION}" /usr/bin/c++
+
+# Remove GCC from specific packages of base.
+apt-get remove --purge --autoremove -y gcc g++
