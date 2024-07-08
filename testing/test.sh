@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 echo "Hello World on C"
 cp tests/test_helloworld.c .
 python3 compile.py --name=hello_world.exe --build-type=Release
