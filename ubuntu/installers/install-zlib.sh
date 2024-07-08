@@ -13,9 +13,10 @@ git clone "${ZLIB_URL}" -b "${ZLIB_VERSION}" "${ZLIB_SRC}"
 # Set working directory to ZLIB sources.
 pushd "${ZLIB_SRC}"
 
-# Build and install ZLIB.
+# Build, test and install ZLIB.
 ./configure --prefix="${EDU_ZLIB}"
 make -j"$(nproc --all)"
+make test
 make install
 
 # Go back.

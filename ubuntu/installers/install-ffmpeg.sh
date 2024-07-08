@@ -13,9 +13,10 @@ git clone "${FFMPEG_URL}" -b "${FFMPEG_VERSION}" "${FFMPEG_SRC}"
 # Set working directory to FFMPEG sources.
 pushd "${FFMPEG_SRC}"
 
-# Build and install FFMPEG.
+# Build, test and install FFMPEG.
 ./configure --cc="${COMPILER_NAME}-${COMPILER_VERSION}" --cxx="${COMPILER_NAMEXX}-${COMPILER_VERSION}" --disable-x86asm --prefix="${EDU_FFMPEG}"
 make -j"$(nproc --all)"
+make fate
 make install
 
 # Go back.

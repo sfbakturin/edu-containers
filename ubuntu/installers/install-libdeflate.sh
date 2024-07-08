@@ -13,9 +13,27 @@ git clone "${LIBDEFLATE_URL}" -b "${LIBDEFLATE_VERSION}" "${LIBDEFLATE_SRC}"
 # Set working directory to libdeflate sources.
 pushd "${LIBDEFLATE_SRC}"
 
-# Build and install libdeflate.
-cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDU_LIBDEFLATE}"
+# Build libdeflate.
+cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDU_LIBDEFLATE}" -D ZLIB_ROOT="${EDU_ZLIB}" -D LIBDEFLATE_BUILD_TESTS=ON
 make -j"$(nproc --all)"
+
+# Set working directory to libdeflate tests.
+pushd programs
+
+# Test libdeflate.
+./test_checksums
+./test_custom_malloc
+./test_incomplete_codes
+./test_invalid_streams
+./test_litrunlen_overflow
+./test_overread
+./test_slow_decompression
+./test_trailing_bytes
+
+# Go back.
+popd
+
+# Install libdeflate.
 make install
 
 # Go back.

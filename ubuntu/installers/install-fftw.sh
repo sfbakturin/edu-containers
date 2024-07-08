@@ -16,9 +16,23 @@ rm "${FFTW_TAR}"
 # Set working directory to FFTW sources.
 pushd "${FFTW_SRC}"
 
-# Build and install FFTW.
+# Build FFTW.
 ./configure --prefix="${EDU_FFTW}"
 make -j"$(nproc --all)"
+
+# Set working directory to FFTW tests.
+pushd tests
+
+# Test FFTW.
+./bench --verify ib8192
+./bench --speed ib8192
+./bench --verify 512x1024
+./bench --speed 512x1024
+
+# Go back.
+popd
+
+# Install FFTW.
 make install
 
 # Go back.
