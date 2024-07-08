@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build --tag "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} -f ubuntu/Dockerfile .
+        run: docker build --tag "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} --build-arg RUN_TESTS=${{env.RUN_TESTS}} -f ubuntu/Dockerfile .
       - name: Test Docker image
         run: |
           docker run -t -d --name testing "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"

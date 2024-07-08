@@ -2,10 +2,6 @@ name: Build and publish Docker images
 
 on: workflow_dispatch
 
-env:
-  RUN_TESTS:
-    false
-
 jobs:
   release:
     name: "Building and publishing image (${{matrix.compiler.name}})"
