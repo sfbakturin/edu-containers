@@ -66,4 +66,3 @@ Below is a list of supported libraries that are built into the system during ima
 | FFmpeg     | 6.1         | `EDU_FFMPEG`     | `EDU_FFMPEG_INCLUDE`     | `EDU_FFMPEG_LIBRARY`     |
 | FFTW       | 3.3.10      | `EDU_FFTW`       | `EDU_FFTW_INCLUDE`       | `EDU_FFTW_LIBRARY`       |
 | libdeflate | 1.20        | `EDU_LIBDEFLATE` | `EDU_LIBDEFLATE_INCLUDE` | `EDU_LIBDEFLATE_LIBRARY` |
-| isa-l      | 2.31.0      | `EDU_ISAL`       | `EDU_ISAL_INCLUDE`       | `EDU_ISAL_LIBRARY`       |

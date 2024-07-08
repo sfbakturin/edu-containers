@@ -25,10 +25,6 @@ ENV CXX=${COMPILER_NAMEXX}-${COMPILER_VERSION}
 COPY ubuntu/installers/install-${COMPILER_NAME}.sh .
 RUN bash install-${COMPILER_NAME}.sh && rm install-${COMPILER_NAME}.sh
 
-# Install libtool.
-COPY ubuntu/installers/install-libtool.sh .
-RUN bash install-libtool.sh && rm install-libtool.sh
-
 # Libraries.
 WORKDIR ${EDU_THIRDPARTY}
 
@@ -71,14 +67,6 @@ ENV EDU_LIBDEFLATE_LIBRARY=${EDU_LIBDEFLATE}/lib
 
 COPY ubuntu/installers/install-libdeflate.sh .
 RUN bash install-libdeflate.sh && rm install-libdeflate.sh
-
-# Install isa-l.
-ENV EDU_ISAL=${EDU_THIRDPARTY}/isal
-ENV EDU_ISAL_INCLUDE=${EDU_ISAL}/include
-ENV EDU_ISAL_LIBRARY=${EDU_ISAL}/lib
-
-COPY ubuntu/installers/install-isal.sh .
-RUN bash install-isal.sh && rm install-isal.sh
 
 # Cleanup.
 COPY ubuntu/installers/install-cleanup.sh .
