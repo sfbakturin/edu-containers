@@ -20,17 +20,21 @@ pushd "${FFTW_SRC}"
 ./configure --prefix="${EDU_FFTW}"
 make -j"$(nproc --all)"
 
-# Set working directory to FFTW tests.
-pushd tests
+# If RUN_TESTS == true, then we should test FFTW.
+if $RUN_TESTS
+then
+  ## Set working directory to FFTW tests.
+  pushd tests
 
-# Test FFTW.
-./bench --verify ib8192
-./bench --speed ib8192
-./bench --verify 512x1024
-./bench --speed 512x1024
+  ## Test FFTW.
+  ./bench --verify ib8192
+  ./bench --speed ib8192
+  ./bench --verify 512x1024
+  ./bench --speed 512x1024
 
-# Go back.
-popd
+  ## Go back.
+  popd
+fi
 
 # Install FFTW.
 make install

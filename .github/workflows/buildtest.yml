@@ -2,6 +2,10 @@ name: Build and test Docker images
 
 on: push
 
+env:
+  RUN_TESTS:
+    true
+
 jobs:
   ubuntu:
     name: "Building and testing image (Ubuntu: ${{matrix.compiler.name}})"

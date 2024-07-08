@@ -13,10 +13,18 @@ git clone "${FFMPEG_URL}" -b "${FFMPEG_VERSION}" "${FFMPEG_SRC}"
 # Set working directory to FFMPEG sources.
 pushd "${FFMPEG_SRC}"
 
-# Build, test and install FFMPEG.
+# Build FFMPEG.
 ./configure --cc="${COMPILER_NAME}-${COMPILER_VERSION}" --cxx="${COMPILER_NAMEXX}-${COMPILER_VERSION}" --disable-x86asm --prefix="${EDU_FFMPEG}"
 make -j"$(nproc --all)"
-make fate
+
+# If RUN_TESTS == true, then we should test FFMPEG.
+if $RUN_TESTS
+then
+  ## Test FFMPEG.
+  make fate
+fi
+
+# Install FFMPEG.
 make install
 
 # Go back.

@@ -17,21 +17,25 @@ pushd "${LIBDEFLATE_SRC}"
 cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDU_LIBDEFLATE}" -D ZLIB_ROOT="${EDU_ZLIB}" -D LIBDEFLATE_BUILD_TESTS=ON
 make -j"$(nproc --all)"
 
-# Set working directory to libdeflate tests.
-pushd programs
+# If RUN_TESTS == true, then we should test libdeflate.
+if $RUN_TESTS
+then
+  ## Set working directory to libdeflate tests.
+  pushd programs
 
-# Test libdeflate.
-./test_checksums
-./test_custom_malloc
-./test_incomplete_codes
-./test_invalid_streams
-./test_litrunlen_overflow
-./test_overread
-./test_slow_decompression
-./test_trailing_bytes
+  ## Test libdeflate.
+  ./test_checksums
+  ./test_custom_malloc
+  ./test_incomplete_codes
+  ./test_invalid_streams
+  ./test_litrunlen_overflow
+  ./test_overread
+  ./test_slow_decompression
+  ./test_trailing_bytes
 
-# Go back.
-popd
+  ## Go back.
+  popd
+fi
 
 # Install libdeflate.
 make install
