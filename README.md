@@ -9,20 +9,21 @@ This repository stores configurations of Linux containers developed for future e
 
 Build the container image with the following required arguments:
 
-* **COMPILER_NAME** - C compiler, suppored: `gcc`, `clang`;
+* **COMPILER_NAME** - C compiler, supported: `gcc`, `clang`;
 * **COMPILER_NAMEXX** - C++ compiler, supported: `g++`, `clang++` (don't mess `gcc` with `clang++` and `g++` with `clang`, it will break everything);
 * **COMPILER_VERSION** - compiler version, depends on selected compiler.
 
 Example:
 
 ```bash
-docker build --tag "educontainer" --build-arg COMPILER_NAME=clang --build-arg COMPILER_NAMEXX=clang++ --build-arg COMPILER_VERSION=18 .
+docker build --tag buildtest:clang --build-arg COMPILER_NAME=clang --build-arg COMPILER_NAMEXX=clang++ --build-arg COMPILER_VERSION=18 -f ubuntu/Dockerfile . # for Clang
+docker build --tag buildtest:gcc --build-arg COMPILER_NAME=gcc --build-arg COMPILER_NAMEXX=g++ --build-arg COMPILER_VERSION=11 -f ubuntu/Dockerfile . # for GCC
 ```
 
 Copy the student files to the `/student` working directory and run the build script:
 
 ```bash
-python3 compile.py --name=student.exe --build-type=release
+python3 compile.py --name=student.exe --build-type=Release
 ```
 
 Check the student's solution.
@@ -36,7 +37,7 @@ Build configuration is done through flags in the following format: **--\<name\>=
 Required flags:
 
 * **name** (1) - name of the executable output file;
-* **build-type** (1) - build optimizations, suppored: *release*, *debug*;
+* **build-type** (1) - build optimizations, supported: *Release*, *Debug*;
 
 Optional flags:
 
@@ -50,7 +51,7 @@ Optional flags:
 Example:
 
 ```bash
-python3 compile.py --name=dummy.out --std=c++20 --build-type=release --include-libraries=GoogleTest --link-libraries=gtest
+python3 compile.py --name=dummy.out --std=c++20 --build-type=Release --include-libraries=GoogleTest --link-libraries=gtest
 ```
 
 At the beginning of the launch, the script is initialized with configuration parameters in YAML format, located in the [`.compileconfig`](compile-app/.compileconfig) directory (in the current or home). The directory values (such as `includedir`) ​​can be either a path (it must exist) or an environment variable in which the path values ​​are written (must also exist).
