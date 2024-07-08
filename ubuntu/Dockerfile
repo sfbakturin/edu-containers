@@ -28,6 +28,12 @@ RUN bash install-${COMPILER_NAME}.sh && rm install-${COMPILER_NAME}.sh
 # Libraries.
 WORKDIR ${EDU_THIRDPARTY}
 
+# Install libtool.
+ENV EDU_LIBTOOL=${EDU_THIRDPARTY}/libtool
+
+COPY ubuntu/installers/install-libtool.sh .
+RUN bash install-libtool.sh && rm install-libtool.sh
+
 # Install zlib.
 ENV EDU_ZLIB=${EDU_THIRDPARTY}/zlib
 ENV EDU_ZLIB_INCLUDE=${EDU_ZLIB}/include
