@@ -16,7 +16,7 @@ rm "${LIBTOOL_TAR}"
 pushd "${LIBTOOL_SRC}"
 
 # Build and install libtool.
-./configure --prefix="${EDU_LIBTOOL}"
+./configure
 make -j"$(nproc --all)"
 make install
 
