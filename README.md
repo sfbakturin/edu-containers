@@ -30,7 +30,7 @@ Check the student's solution.
 
 ## `compile.py`
 
-[`compile.py`](compile-app/compile.py) is a script designed to automate the generation of a build command and linking a program with supported libraries. After generating the command, the script immediately starts the build.
+[`compile.py`](compiler/compile.py) is a script designed to automate the generation of a build command and linking a program with supported libraries. After generating the command, the script immediately starts the build.
 
 Build configuration is done through flags in the following format: **--\<name\>=\<value\>** or **--\<name\>=\<value\>,\<value\>,...,\<value\>**.
 
@@ -54,7 +54,7 @@ Example:
 python3 compile.py --name=dummy.out --std=c++20 --build-type=Release --include-libraries=GoogleTest --link-libraries=gtest
 ```
 
-At the beginning of the launch, the script is initialized with configuration parameters in YAML format, located in the [`.compileconfig`](compile-app/.compileconfig) directory (in the current or home). The directory values (such as `includedir`) ​​can be either a path (it must exist) or an environment variable in which the path values ​​are written (must also exist).
+At the beginning of the launch, the script is initialized with configuration parameters in YAML format, located in the [`.compileconfig`](compiler/.compileconfig) directory (in the current or home). The directory values (such as `includedir`) ​​can be either a path (it must exist) or an environment variable in which the path values ​​are written (must also exist).
 
 ## Supported libraries
 
