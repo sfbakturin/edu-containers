@@ -136,14 +136,14 @@ class CCBuilder:
 		if len(self.__CCBuilder_std_flags) != 0:
 			cmd += self.__CCBuilder_std_flags
 
+		cmd += self.__CCBuilder_warn_flags
+
 		if len(self.__CCBuilder_bt_flags) == 0:
 			raise ValueError("Command for compiling should be provided by build-type")
 		cmd += self.__CCBuilder_bt_flags
 
 		if len(self.__CCBuilder_san_flags) != 0:
 			cmd += self.__CCBuilder_san_flags
-
-		cmd += self.__CCBuilder_warn_flags
 
 		if len(self.__CCBuilder_comp_flags) != 0:
 			cmd += self.__CCBuilder_comp_flags
@@ -161,10 +161,10 @@ class CCBuilder:
 		if self.__CCBuilder_name_executable is None:
 			raise ValueError("Unknown executable name")
 
-		cmd += ["-o", self.__CCBuilder_name_executable]
-
 		if len(self.__CCBuilder_ld_flags) != 0:
 			cmd += self.__CCBuilder_ld_flags
+
+		cmd += ["-o", self.__CCBuilder_name_executable]
 
 		return cmd
 
