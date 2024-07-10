@@ -82,6 +82,8 @@ class CCBuilder:
 		self.__CCBuilder_bt_flags = ["-O0", "-g"]
 
 	def set_sanitizer(self, name_sanitize: str):
+		if name_sanitize.lower() == "none":
+			return
 		self.__CCBuilder_san_flags = ["-fno-sanitize-recover=all", "-fsanitize=" + name_sanitize]
 
 	def set_name_executable(self, name_executable: str):
@@ -298,5 +300,6 @@ if os.path.exists("include"):
 
 ## Run compilation.
 
-print(" ".join(cc.get_command()))
-subprocess.run(cc.get_command())
+command = cc.get_command()
+print(" ".join(command))
+exit(subprocess.run(command).returncode)
