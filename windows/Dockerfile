@@ -92,7 +92,8 @@ ENV EDU_GOOGLETEST_INCLUDE=${EDU_GOOGLETEST}/include
 ENV EDU_GOOGLETEST_LIBRARY=${EDU_GOOGLETEST}/lib
 
 RUN `
-    git clone https://github.com/google/googletest.git -b v1.14.0 gtest-src `
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\Common7\\Tools\\VsDevCmd.bat" "-arch=amd64" `
+    && git clone https://github.com/google/googletest.git -b v1.14.0 gtest-src `
     && pushd gtest-src `
     && cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=${EDU_GOOGLETEST} `
     && cmake --build . --target install --config Release `
