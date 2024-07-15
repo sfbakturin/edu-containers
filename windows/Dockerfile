@@ -4,8 +4,8 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
 ARG RUN_TESTS=false
 
-ENV EDU_THIRDPARTY=/thirdparty
-ENV EDU_STUDENT=/student
+ENV EDUCONTAINER_THIRDPARTY=/thirdparty
+ENV EDUCONTAINER_STUDENT=/student
 
 ENV `
     # Enable detection of running in a container
@@ -32,27 +32,49 @@ RUN `
     && %windir%\Microsoft.NET\Framework64\v4.0.30319\ngen update `
     && %windir%\Microsoft.NET\Framework\v4.0.30319\ngen update
 
+# Fixup msiexec.
 RUN msiexec /REGISTER
 
+# Set shell to powershell.
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
+# Install C/C++ compiler.
 COPY windows/installers/install-msvc.ps1 .
 RUN .\install-msvc.ps1; Remove-Item .\install-msvc.ps1
 
+# Install CMake.
 COPY windows/installers/install-cmake.ps1 .
 RUN .\install-cmake.ps1; Remove-Item .\install-cmake.ps1
 
+# Install Git.
 COPY windows/installers/install-git.ps1 .
 RUN .\install-git.ps1; Remove-Item .\install-git.ps1
 
-# Libraries.
-WORKDIR ${EDU_THIRDPARTY}
+# Install Python.
+COPY windows/installers/install-python.ps1 .
+RUN .\install-python.ps1; Remove-Item .\install-python.ps1
 
-# Install GoogleTest.
-ENV EDU_CONTAINER_GOOGLETEST=${EDU_THIRDPARTY}/googletest
-ENV EDU_CONTAINER_GOOGLETEST_INCLUDE=${EDU_GOOGLETEST}/include
-ENV EDU_CONTAINER_GOOGLETEST_LIBRARY=${EDU_GOOGLETEST}/lib
+# Install 7z.
+COPY windows/installers/install-7z.ps1 .
+RUN .\install-7z.ps1; Remove-Item .\install-7z.ps1
+
+# Libraries.
+WORKDIR ${EDUCONTAINER_THIRDPARTY}
+
+ARG TARGET_BITS=64
+
+## Install zlib.
+ENV EDUCONTAINER_ZLIB=${EDUCONTAINER_THIRDPARTY}/zlib
+ENV EDUCONTAINER_ZLIB_INCLUDE=${EDUCONTAINER_ZLIB}/include
+ENV EDUCONTAINER_ZLIB_LIBRARY=${EDUCONTAINER_ZLIB}/lib
+
+COPY windows/installers/install-zlib.ps1 .
+RUN .\install-zlib.ps1; Remove-Item .\install-zlib.ps1
+
+## Install GoogleTest.
+ENV EDUCONTAINER_GOOGLETEST=${EDUCONTAINER_THIRDPARTY}/googletest
+ENV EDUCONTAINER_GOOGLETEST_INCLUDE=${EDUCONTAINER_GOOGLETEST}/include
+ENV EDUCONTAINER_GOOGLETEST_LIBRARY=${EDUCONTAINER_GOOGLETEST}/lib
 
 COPY windows/installers/install-gtest.ps1 .
 RUN .\install-gtest.ps1; Remove-Item .\install-gtest.ps1
-
