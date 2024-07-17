@@ -78,3 +78,11 @@ ENV EDUCONTAINER_GOOGLETEST_LIBRARY=${EDUCONTAINER_GOOGLETEST}/lib
 
 COPY windows/installers/install-gtest.ps1 .
 RUN .\install-gtest.ps1; Remove-Item .\install-gtest.ps1
+
+## Install FFTW.
+ENV EDUCONTAINER_FFTW=${EDUCONTAINER_THIRDPARTY}/fftw
+ENV EDUCONTAINER_FFTW_INCLUDE=${EDUCONTAINER_FFTW}/include
+ENV EDUCONTAINER_FFTW_LIBRARY=${EDUCONTAINER_FFTW}/lib
+
+COPY windows/installers/install-fftw.ps1 .
+RUN .\install-fftw.ps1; Remove-Item .\install-fftw.ps1
