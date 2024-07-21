@@ -5,6 +5,8 @@ on: push
 env:
   RUN_TESTS:
     true
+  BASE_IMAGE_NAME:
+    "${{ vars.HUB_USERNAME }}/educontainer"
 
 jobs:
   ubuntu:
@@ -27,21 +29,20 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME: "${{ vars.HUB_USERNAME }}/educontainer"
-      IMAGE_TAG: "${{ matrix.compiler.cc }}${{ matrix.compiler.version }}"
+      BASE_IMAGE_TAG: "${{ matrix.compiler.cc }}${{ matrix.compiler.version }}"
 
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build --tag "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" --build-arg COMPILER_NAME=${{ matrix.compiler.cc }} --build-arg COMPILER_NAMEXX=${{ matrix.compiler.cxx }} --build-arg COMPILER_VERSION=${{ matrix.compiler.version }} --build-arg RUN_TESTS=${{ env.RUN_TESTS }} -f ubuntu/Dockerfile .
+        run: docker build --tag "${{ env.BASE_IMAGE_NAME }}:${{ env.BASE_IMAGE_TAG }}" --build-arg COMPILER_NAME=${{ matrix.compiler.cc }} --build-arg COMPILER_NAMEXX=${{ matrix.compiler.cxx }} --build-arg COMPILER_VERSION=${{ matrix.compiler.version }} --build-arg RUN_TESTS=${{ env.RUN_TESTS }} -f ubuntu/Dockerfile .
       - name: Test Docker image
         run: |
-          docker run -t -d --name testing "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          docker run -t -d --name testing "${{ env.BASE_IMAGE_NAME }}:${{ env.BASE_IMAGE_TAG }}"
           docker cp testing/. testing:/student
           docker exec testing bash test.sh
 
   windows:
-    name: "Building and testing image (Windows: ${{ matrix.os.name }}, ${{ matrix.compiler.name }}, ${{ matrix.arch.name }})"
+    name: "Building and testing image (Windows: ${{ matrix.os.name }}, ${{ matrix.compiler.name }})"
 
     strategy:
       fail-fast: true
@@ -52,17 +53,12 @@ jobs:
         os:
           - { name: LTSC 2019, sys: ltsc, version: 2019 }
 
-        arch:
-          - { name: '32-bit', value: 32 }
-          - { name: '64-bit', value: 64 }
-
     runs-on: windows-2019
 
     env:
-      IMAGE_NAME: "${{ vars.HUB_USERNAME }}/educontainer"
-      IMAGE_TAG: "${{ matrix.os.sys }}${{ matrix.os.version }}-${{ matrix.compiler.cc }}${{ matrix.arch.value }}"
+      BASE_IMAGE_TAG: "${{ matrix.os.sys }}${{ matrix.os.version }}-${{ matrix.compiler.cc }}"
 
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build --tag "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" --build-arg RUN_TESTS=${{ env.RUN_TESTS }} --build-arg TARGET_BITS=${{ matrix.arch.value }} -f windows/Dockerfile .
+        run: docker build --tag "${{ env.BASE_IMAGE_NAME }}:${{ env.BASE_IMAGE_TAG }}" --build-arg RUN_TESTS=${{ env.RUN_TESTS }} -f windows/Dockerfile .
