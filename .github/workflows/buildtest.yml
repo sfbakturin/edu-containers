@@ -8,7 +8,7 @@ env:
 
 jobs:
   ubuntu-gcc:
-    name: "BuildTest (Ubuntu: GCC ${{ matrix.version }})"
+    name: "Building and testing image (Ubuntu: GCC ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
@@ -28,7 +28,7 @@ jobs:
         run: bash extra/buildtest.sh "gcc" "g++" "${{ matrix.version }}"
 
   ubuntu-clang:
-    name: "BuildTest (Ubuntu: Clang ${{ matrix.version }})"
+    name: "Building and testing image (Ubuntu: Clang ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
