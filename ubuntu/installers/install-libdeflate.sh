@@ -7,6 +7,16 @@ LIBDEFLATE_VERSION="v1.20"
 LIBDEFLATE_URL="https://github.com/ebiggers/libdeflate.git"
 LIBDEFLATE_SRC="libdeflate-src"
 
+LIBDEFLATE_TEST='OFF'
+
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should build tests.
+if $BUILD_EXTRAS_RUN_TESTS
+then
+  LIBDEFLATE_TEST='ON'
+fi
+
+LIBDEFLATE_DIRTESTS='programs'
+
 # Download libdeflate sources.
 git clone "${LIBDEFLATE_URL}" -b "${LIBDEFLATE_VERSION}" "${LIBDEFLATE_SRC}"
 
@@ -14,14 +24,14 @@ git clone "${LIBDEFLATE_URL}" -b "${LIBDEFLATE_VERSION}" "${LIBDEFLATE_SRC}"
 pushd "${LIBDEFLATE_SRC}"
 
 # Build libdeflate.
-cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDUCONTAINER_LIBDEFLATE}" -D ZLIB_ROOT="${EDUCONTAINER_ZLIB}" -D LIBDEFLATE_BUILD_TESTS=ON
+cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDUCONTAINER_LIBDEFLATE}" -D ZLIB_ROOT="${EDUCONTAINER_ZLIB}" -D LIBDEFLATE_BUILD_TESTS="${LIBDEFLATE_TEST}"
 make -j"$(nproc --all)"
 
 # If BUILD_EXTRAS_RUN_TESTS == true, then we should test libdeflate.
 if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Set working directory to libdeflate tests.
-  pushd programs
+  pushd "${LIBDEFLATE_DIRTESTS}"
 
   ## Test libdeflate.
   ./test_checksums

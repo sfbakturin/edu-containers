@@ -9,7 +9,7 @@ ENV EDUCONTAINER_THIRDPARTY=/thirdparty
 ENV EDUCONTAINER_STUDENT=/student
 
 # Update system.
-RUN apt-get update && apt-get upgrade -y
+RUN apt-get update
 
 # Install base utils.
 COPY ubuntu/installers/install-base.sh .
