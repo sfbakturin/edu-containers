@@ -26,6 +26,9 @@ docker build --tag "${IMAGE_NAME}" \
              -f ubuntu/Dockerfile .
 
 # Test image.
-docker run -t -d --name "${CONTAINER_NAME}" "${IMAGE_NAME}"
-docker cp testing/. "${CONTAINER_NAME}":/student
-docker exec "${CONTAINER_NAME}" bash test.sh
+if $RUN_TESTS
+then
+    docker run -t -d --name "${CONTAINER_NAME}" "${IMAGE_NAME}"
+    docker cp testing/. "${CONTAINER_NAME}":/student
+    docker exec "${CONTAINER_NAME}" bash test.sh
+fi
