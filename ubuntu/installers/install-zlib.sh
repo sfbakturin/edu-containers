@@ -17,8 +17,8 @@ pushd "${ZLIB_SRC}"
 ./configure --prefix="${EDUCONTAINER_ZLIB}"
 make -j"$(nproc --all)"
 
-# If RUN_TESTS == true, then we should test ZLIB.
-if $RUN_TESTS
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should test ZLIB.
+if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Test ZLIB.
   make test

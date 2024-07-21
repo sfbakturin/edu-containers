@@ -20,8 +20,8 @@ pushd "${FFMPEG_SRC}"
             --prefix="${EDUCONTAINER_FFMPEG}"
 make -j"$(nproc --all)"
 
-# If RUN_TESTS == true, then we should test FFMPEG.
-if $RUN_TESTS
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should test FFMPEG.
+if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Test FFMPEG.
   make fate

@@ -20,8 +20,8 @@ pushd "${FFTW_SRC}"
 ./configure --prefix="${EDUCONTAINER_FFTW}"
 make -j"$(nproc --all)"
 
-# If RUN_TESTS == true, then we should test FFTW.
-if $RUN_TESTS
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should test FFTW.
+if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Set working directory to FFTW tests.
   pushd tests

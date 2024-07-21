@@ -17,8 +17,8 @@ pushd "${LIBDEFLATE_SRC}"
 cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDUCONTAINER_LIBDEFLATE}" -D ZLIB_ROOT="${EDUCONTAINER_ZLIB}" -D LIBDEFLATE_BUILD_TESTS=ON
 make -j"$(nproc --all)"
 
-# If RUN_TESTS == true, then we should test libdeflate.
-if $RUN_TESTS
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should test libdeflate.
+if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Set working directory to libdeflate tests.
   pushd programs

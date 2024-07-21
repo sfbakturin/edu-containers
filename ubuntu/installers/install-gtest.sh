@@ -17,8 +17,8 @@ pushd "${GTEST_SRC}"
 cmake . -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="${EDUCONTAINER_GOOGLETEST}" -D gtest_build_tests=ON
 make -j"$(nproc --all)"
 
-# If RUN_TESTS == true, then we should test GoogleTest.
-if $RUN_TESTS
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should test GoogleTest.
+if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Test GoogleTest.
   make test
