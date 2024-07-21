@@ -10,7 +10,7 @@ $imageName = "$env:BASE_IMAGE_NAME:${baseImageTag}"
 
 # Build image.
 docker build --tag "${imageName}" `
-    --build-arg RUN_TESTS=$env:BUILD_EXTRAS_RUN_TESTS `
+    --build-arg BUILD_EXTRAS_RUN_TESTS=$env:RUN_TESTS `
     -f windows/Dockerfile .
 
 # Test image.

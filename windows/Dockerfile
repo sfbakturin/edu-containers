@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
-ARG RUN_TESTS=false
+ARG BUILD_EXTRAS_RUN_TESTS=false
 
 ENV EDUCONTAINER_THIRDPARTY=/thirdparty
 ENV EDUCONTAINER_STUDENT=/student
