@@ -12,9 +12,9 @@ apt-get remove --purge --autoremove -y gcc g++ gcc-11 g++-11
 wget "${LLVM_APT_URL}/${LLVM_INSTALL_SCRIPT}"
 
 # Install a specific version of LLVM and remove script.
-bash "${LLVM_INSTALL_SCRIPT}" "${COMPILER_VERSION}"
+bash "${LLVM_INSTALL_SCRIPT}" "${BUILD_TARGET_VERSION}"
 rm "${LLVM_INSTALL_SCRIPT}"
 
 # Link standard CC and CXX to clang.
-ln -s /usr/bin/clang-"${COMPILER_VERSION}" /usr/bin/cc
-ln -s /usr/bin/clang++-"${COMPILER_VERSION}" /usr/bin/c++
+ln -s /usr/bin/clang-"${BUILD_TARGET_VERSION}" /usr/bin/cc
+ln -s /usr/bin/clang++-"${BUILD_TARGET_VERSION}" /usr/bin/c++

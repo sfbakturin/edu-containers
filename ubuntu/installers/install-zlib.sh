@@ -14,7 +14,7 @@ git clone "${ZLIB_URL}" -b "${ZLIB_VERSION}" "${ZLIB_SRC}"
 pushd "${ZLIB_SRC}"
 
 # Build ZLIB.
-./configure --prefix="${EDU_ZLIB}"
+./configure --prefix="${EDUCONTAINER_ZLIB}"
 make -j"$(nproc --all)"
 
 # If RUN_TESTS == true, then we should test ZLIB.

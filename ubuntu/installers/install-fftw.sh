@@ -17,7 +17,7 @@ rm "${FFTW_TAR}"
 pushd "${FFTW_SRC}"
 
 # Build FFTW.
-./configure --prefix="${EDU_FFTW}"
+./configure --prefix="${EDUCONTAINER_FFTW}"
 make -j"$(nproc --all)"
 
 # If RUN_TESTS == true, then we should test FFTW.

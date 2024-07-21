@@ -9,8 +9,8 @@ add-apt-repository "${GCC_PPA_URL}"
 apt-get update
 
 # Install a specific version of GCC.
-apt-get install -y --no-install-recommends gcc-"${COMPILER_VERSION}" g++-"${COMPILER_VERSION}"
+apt-get install -y --no-install-recommends gcc-"${BUILD_TARGET_VERSION}" g++-"${BUILD_TARGET_VERSION}"
 
 # Link standard CC and CXX to clang.
-ln -sf /usr/bin/gcc-"${COMPILER_VERSION}" /usr/bin/cc
-ln -sf /usr/bin/g++-"${COMPILER_VERSION}" /usr/bin/c++
+ln -sf /usr/bin/gcc-"${BUILD_TARGET_VERSION}" /usr/bin/cc
+ln -sf /usr/bin/g++-"${BUILD_TARGET_VERSION}" /usr/bin/c++

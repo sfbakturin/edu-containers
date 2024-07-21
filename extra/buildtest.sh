@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 if test "$#" -ne 3
 then
     echo "Illegal number of parameters"
@@ -17,10 +19,10 @@ CONTAINER_NAME='buildtest'
 
 # Build image.
 docker build --tag "${IMAGE_NAME}" \
-             --build-arg COMPILER_NAME=${COMPILER_NAME} \
-             --build-arg COMPILER_NAMEXX=${COMPILER_NAMEXX} \
-             --build-arg COMPILER_VERSION=${COMPILER_VERSION} \
-             --build-arg RUN_TESTS=${RUN_TESTS} \
+             --build-arg BUILD_TARGET_NAME=${COMPILER_NAME} \
+             --build-arg BUILD_TARGET_NAMEXX=${COMPILER_NAMEXX} \
+             --build-arg BUILD_TARGET_VERSION=${COMPILER_VERSION} \
+             --build-arg BUILD_EXTRAS_RUN_TESTS=${RUN_TESTS} \
              -f ubuntu/Dockerfile .
 
 # Test image.
