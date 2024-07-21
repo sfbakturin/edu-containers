@@ -1,6 +1,5 @@
 FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
-ARG TARGET_BITS=64
 ARG RUN_TESTS=false
 
 ENV EDUCONTAINER_THIRDPARTY=/thirdparty
