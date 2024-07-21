@@ -46,22 +46,19 @@ jobs:
       - name: Build and test
         run: bash extra/buildtest.sh "clang" "clang++" "${{ matrix.version }}"
 
-  windows:
-    name: "Building and testing image (Windows: ${{ matrix.os.name }}, ${{ matrix.compiler.name }})"
+  windows-msvc:
+    name: "Building and testing image (Windows: MSVC)"
 
     strategy:
       fail-fast: true
       matrix:
-        compiler:
-          - { name: MSVC, cc: cl }
+        version:
+          - 2019
 
-        os:
-          - { name: LTSC 2019, sys: ltsc, version: 2019 }
-
-    runs-on: windows-2019
+    runs-on: windows-${{ matrix.version }}
 
     env:
-      BASE_IMAGE_TAG: "${{ matrix.os.sys }}${{ matrix.os.version }}-${{ matrix.compiler.cc }}"
+      BASE_IMAGE_TAG: "ltsc${{ matrix.version }}-msvc"
 
     steps:
       - uses: actions/checkout@v4
