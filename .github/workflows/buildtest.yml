@@ -57,10 +57,7 @@ jobs:
 
     runs-on: windows-${{ matrix.version }}
 
-    env:
-      BASE_IMAGE_TAG: "ltsc${{ matrix.version }}-msvc"
-
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker build --tag "${{ env.BASE_IMAGE_NAME }}:${{ env.BASE_IMAGE_TAG }}" --build-arg RUN_TESTS=${{ env.RUN_TESTS }} -f windows/Dockerfile .
+      - name: Build and test
+        run: powershell .\extra\buildtest.ps1 "msvc" "${{ matrix.version }}"
