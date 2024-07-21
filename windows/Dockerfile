@@ -55,6 +55,14 @@ ENV EDUCONTAINER_GOOGLETEST_LIBRARY=${EDUCONTAINER_GOOGLETEST}/lib
 COPY windows/installers/install-gtest.ps1 .
 RUN .\install-gtest.ps1; Remove-Item .\install-gtest.ps1
 
+## Install FFmpeg.
+ENV EDUCONTAINER_FFMPEG=${EDUCONTAINER_THIRDPARTY}/ffmpeg
+ENV EDUCONTAINER_FFMPEG_INCLUDE=${EDUCONTAINER_FFMPEG}/include
+ENV EDUCONTAINER_FFMPEG_LIBRARY=${EDUCONTAINER_FFMPEG}/lib
+
+COPY windows/installers/install-ffmpeg.ps1 .
+RUN .\install-ffmpeg.ps1; Remove-Item .\install-ffmpeg.ps1
+
 ## Install FFTW.
 ENV EDUCONTAINER_FFTW=${EDUCONTAINER_THIRDPARTY}/fftw
 ENV EDUCONTAINER_FFTW_INCLUDE=${EDUCONTAINER_FFTW}/include
@@ -63,10 +71,10 @@ ENV EDUCONTAINER_FFTW_LIBRARY=${EDUCONTAINER_FFTW}/lib
 COPY windows/installers/install-fftw.ps1 .
 RUN .\install-fftw.ps1; Remove-Item .\install-fftw.ps1
 
-## Install FFmpeg.
-ENV EDUCONTAINER_FFMPEG=${EDUCONTAINER_THIRDPARTY}/ffmpeg
-ENV EDUCONTAINER_FFMPEG_INCLUDE=${EDUCONTAINER_FFMPEG}/include
-ENV EDUCONTAINER_FFMPEG_LIBRARY=${EDUCONTAINER_FFMPEG}/lib
+## Install libdeflate.
+ENV EDUCONTAINER_LIBDEFLATE=${EDUCONTAINER_THIRDPARTY}/libdeflate
+ENV EDUCONTAINER_LIBDEFLATE_INCLUDE=${EDUCONTAINER_LIBDEFLATE}/include
+ENV EDUCONTAINER_LIBDEFLATE_LIBRARY=${EDUCONTAINER_LIBDEFLATE}/lib
 
-COPY windows/installers/install-ffmpeg.ps1 .
-RUN .\install-ffmpeg.ps1; Remove-Item .\install-ffmpeg.ps1
+COPY windows/installers/install-libdeflate.ps1 .
+RUN .\install-libdeflate.ps1; Remove-Item .\install-libdeflate.ps1
