@@ -8,15 +8,11 @@ env:
 
 jobs:
   ubuntu-gcc:
-    name: "BuildTest (Ubuntu: ${{ matrix.cc }} ${{ matrix.version }})"
+    name: "BuildTest (Ubuntu: GCC ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
       matrix:
-        cc:
-          - gcc
-        cxx:
-          - g++
         version:
           - 13
           - 12
@@ -29,18 +25,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: bash extra/build-image.sh "${{ matrix.cc }}" "${{ matrix.cxx }}" "${{ matrix.version }}"
+        run: bash extra/build-image.sh "gcc" "g++" "${{ matrix.version }}"
 
   ubuntu-clang:
-    name: "BuildTest (Ubuntu: ${{ matrix.cc }} ${{ matrix.version }})"
+    name: "BuildTest (Ubuntu: Clang ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
       matrix:
-        cc:
-          - clang
-        cxx:
-          - clang++
         version:
           - 18
           - 17
@@ -52,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: bash extra/build-image.sh "${{ matrix.cc }}" "${{ matrix.cxx }}" "${{ matrix.version }}"
+        run: bash extra/build-image.sh "clang" "clang++" "${{ matrix.version }}"
 
   windows:
     name: "Building and testing image (Windows: ${{ matrix.os.name }}, ${{ matrix.compiler.name }})"
