@@ -24,8 +24,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: bash extra/build-image.sh "gcc" "g++" "${{ matrix.version }}"
+      - name: Build and test
+        run: bash extra/buildtest.sh "gcc" "g++" "${{ matrix.version }}"
 
   ubuntu-clang:
     name: "BuildTest (Ubuntu: Clang ${{ matrix.version }})"
@@ -43,8 +43,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: bash extra/build-image.sh "clang" "clang++" "${{ matrix.version }}"
+      - name: Build and test
+        run: bash extra/buildtest.sh "clang" "clang++" "${{ matrix.version }}"
 
   windows:
     name: "Building and testing image (Windows: ${{ matrix.os.name }}, ${{ matrix.compiler.name }})"

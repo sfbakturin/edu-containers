@@ -9,13 +9,21 @@ fi
 COMPILER_NAME="${1}"
 COMPILER_NAMEXX="${2}"
 COMPILER_VERSION="${3}"
+
 BASE_IMAGE_TAG="${COMPILER_NAME}-${COMPILER_VERSION}"
 
-FULL_TAG="${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
+IMAGE_NAME="${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
+CONTAINER_NAME='buildtest'
 
-docker build --tag "${FULL_TAG}" \
+# Build image.
+docker build --tag "${IMAGE_NAME}" \
              --build-arg COMPILER_NAME=${COMPILER_NAME} \
              --build-arg COMPILER_NAMEXX=${COMPILER_NAMEXX} \
              --build-arg COMPILER_VERSION=${COMPILER_VERSION} \
              --build-arg RUN_TESTS=${RUN_TESTS} \
              -f ubuntu/Dockerfile .
+
+# Test image.
+docker run -t -d --name "${CONTAINER_NAME}" "${IMAGE_NAME}"
+docker cp testing/. "${CONTAINER_NAME}":/student
+docker exec "${CONTAINER_NAME}" bash test.sh
