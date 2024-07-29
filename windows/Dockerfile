@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
+ARG BUILD_TARGET_VERSION
 ARG BUILD_EXTRAS_RUN_TESTS=false
 
 ENV EDUCONTAINER_THIRDPARTY=/thirdparty

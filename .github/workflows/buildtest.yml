@@ -47,15 +47,17 @@ jobs:
         run: bash extra/buildtest.sh "clang" "clang++" "${{ matrix.version }}"
 
   windows-msvc:
-    name: "Building and testing image (Windows: MSVC)"
+    name: "Building and testing image (Windows: MSVC ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
       matrix:
         version:
-          - 2019
+          - 17
+          - 16
+          - 15
 
-    runs-on: windows-${{ matrix.version }}
+    runs-on: windows-2019
 
     steps:
       - uses: actions/checkout@v4

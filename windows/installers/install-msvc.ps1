@@ -1,6 +1,6 @@
 $installer = 'msvc-installer.exe'
 
-$version = 17
+$version = $env:BUILD_TARGET_VERSION
 $channel = 'release'
 $edition = 'buildtools'
 
