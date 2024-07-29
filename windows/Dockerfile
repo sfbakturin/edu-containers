@@ -5,6 +5,7 @@ ARG BUILD_EXTRAS_RUN_TESTS=false
 
 ENV EDUCONTAINER_THIRDPARTY=/thirdparty
 ENV EDUCONTAINER_STUDENT=/student
+ENV EDUCONTAINER_TARGET=windows
 
 # Enable detection of running in a container
 ENV COMPLUS_RUNNING_IN_CONTAINER=1
@@ -78,3 +79,9 @@ ENV EDUCONTAINER_LIBDEFLATE_LIBRARY=${EDUCONTAINER_LIBDEFLATE}/lib
 
 COPY windows/installers/install-libdeflate.ps1 .
 RUN .\install-libdeflate.ps1; Remove-Item .\install-libdeflate.ps1
+
+# Student entry point.
+WORKDIR ${EDUCONTAINER_STUDENT}
+
+# Compiler file and default configs.
+COPY compiler/ .

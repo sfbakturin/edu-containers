@@ -7,6 +7,7 @@ ARG BUILD_EXTRAS_RUN_TESTS=false
 
 ENV EDUCONTAINER_THIRDPARTY=/thirdparty
 ENV EDUCONTAINER_STUDENT=/student
+ENV EDUCONTAINER_TARGET=linux
 
 # Update system.
 RUN apt-get update
