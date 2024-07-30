@@ -15,3 +15,6 @@ Start-Process -FilePath $installer -Wait -ArgumentList @(
 
 Write-Host 'Removing temporary files...';
 Remove-Item -Force $installer;
+
+Write-Host 'Installing pyyaml package...';
+pip install pyyaml;
