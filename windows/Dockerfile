@@ -3,9 +3,10 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2019
 ARG BUILD_TARGET_VERSION
 ARG BUILD_EXTRAS_RUN_TESTS=false
 
-ENV EDUCONTAINER_THIRDPARTY=/thirdparty
-ENV EDUCONTAINER_STUDENT=/student
-ENV EDUCONTAINER_TARGET=windows
+ENV EDUCONTAINER_THIRDPARTY='C:/thirdparty'
+ENV EDUCONTAINER_STUDENT='C:/student'
+ENV EDUCONTAINER_TARGET_SYSTEM=windows
+ENV EDUCONTAINER_TARGET_NAME=msvc
 
 # Enable detection of running in a container
 ENV COMPLUS_RUNNING_IN_CONTAINER=1
@@ -85,3 +86,6 @@ WORKDIR ${EDUCONTAINER_STUDENT}
 
 # Compiler file and default configs.
 COPY compiler/ .
+
+# Set Powershell as entrypoint.
+ENTRYPOINT ["cmd.exe", "/K", "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\Common7\\Tools\\VsDevCmd.bat"]
