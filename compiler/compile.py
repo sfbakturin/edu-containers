@@ -197,6 +197,10 @@ class ClangCompiler(Compiler):
 		self.__initialize()
 
 	def __initialize(self):
+		# Check compiler compatibility.
+		if self.target() != Target.LINUX:
+			raise NotImplementedError('Clang compiler is supported only on Linux yet')
+
 		# Set to Clang max warning level.
 		self.__warnings = ['Wall', 'Wextra', 'Wpedantic']
 
@@ -209,22 +213,19 @@ class ClangCompiler(Compiler):
 				# Generate code with debug information.
 				self.__optimizations = ['O0']
 			case _:
-				target = Compiler.target()
 				# Generate code with even more debug information.
 				self.__optimizations = ['O0', '-g']
 				# Set sanitizer.
 				if profile == Profile.ADDRESS_SANITIZED:
 					self.__sanitizers = ['address']
-				elif target == Target.LINUX and profile == Profile.LEAK_SANITIZED:
+				elif profile == Profile.LEAK_SANITIZED:
 					self.__sanitizers = ['leak']
-				elif target == Target.LINUX and profile == Profile.UNDEFINED_BEHAVIOR_SANITIZED:
+				elif profile == Profile.UNDEFINED_BEHAVIOR_SANITIZED:
 					self.__sanitizers = ['undefined']
-				elif target == Target.LINUX and profile == Profile.THREAD_SANITIZED:
+				elif profile == Profile.THREAD_SANITIZED:
 					self.__sanitizers = ['thread']
-				elif target == Target.LINUX and profile == Profile.MEMORY_SANITIZED:
-					self.__sanitizers = ['memory']
 				else:
-					raise ValueError('Unsupported sanitizer or operating system (%s) found' % (target2str(target)))
+					self.__sanitizers = ['memory']
 
 	def set_standard(self, std: STD):
 		self.__standard = std2str(std)
@@ -293,6 +294,121 @@ class ClangCompiler(Compiler):
 
 		return cmd
 
+class GCCCompiler(Compiler):
+	__FORMAT_FLAG = '-%s'
+	__FORMAT_VALUE = '%s%s%s'
+
+	def __init__(self, target: Target):
+		super().__init__(target)
+		self.__defines: List[str] = []
+		self.__standard: str = None
+		self.__optimizations: List[str] = []
+		self.__warnings: List[str] = []
+		self.__sanitizers: List[str] = []
+		self.__sources: List[str] = []
+		self.__includes: List[str] = []
+		self.__libpaths: List[str] = []
+		self.__libs: List[str] = []
+		self.__initialize()
+
+	def __initialize(self):
+		# Check compiler compatibility.
+		if self.target() != Target.LINUX:
+			raise ValueError('GCC is available only on Linux')
+
+		# Set to GCC max warning level.
+		self.__warnings = ['Wall', 'Wextra', 'Wpedantic']
+
+	def use_profile(self, profile: Profile):
+		match profile:
+			case Profile.RELEASE:
+				# Generate optimized code.
+				self.__optimizations = ['O2']
+			case Profile.DEBUG:
+				# Generate code with debug information.
+				self.__optimizations = ['O0']
+			case _:
+				# Generate code with even more debug information.
+				self.__optimizations = ['O0', '-g']
+				# Set sanitizer.
+				if profile == Profile.ADDRESS_SANITIZED:
+					self.__sanitizers = ['address']
+				elif profile == Profile.LEAK_SANITIZED:
+					self.__sanitizers = ['leak']
+				elif profile == Profile.UNDEFINED_BEHAVIOR_SANITIZED:
+					self.__sanitizers = ['undefined']
+				elif profile == Profile.THREAD_SANITIZED:
+					self.__sanitizers = ['thread']
+				else:
+					raise ValueError('Unsupported sanitizer found')
+
+	def set_standard(self, std: STD):
+		self.__standard = std2str(std)
+
+	def add_source(self, filename: str):
+		if not os.path.exists(filename):
+			raise ValueError('File \"%s\" is not exists' % (filename))
+		self.__sources.append(filename)
+
+	def add_sources(self, filenames: List[str]):
+		for p in filenames:
+			self.add_source(p)
+
+	def add_include(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__includes.append(dirname)
+
+	def add_libpath(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__libpaths.append(dirname)
+
+	def link_library(self, libname: str):
+		self.__libs.append(libname)
+
+	def finalize(self, outname: str, cxx: bool) -> List[str]:
+		def fmt(flag: str, value: Optional[str] = None, sep: str = ' ') -> str:
+			prefix = self.__FORMAT_FLAG % (flag)
+			if value is None: return prefix
+			return self.__FORMAT_VALUE % (prefix, sep, value)
+
+		cmd: List[str] = []
+
+		if cxx: cmd = ['g++']
+		else: cmd = ['gcc']
+
+		for define in self.__defines:
+			cmd.append(fmt('D', define, ''))
+
+		if self.__standard:
+			cmd.append(fmt('std', self.__standard, '='))
+
+		for optimization in self.__optimizations:
+			cmd.append(fmt(optimization))
+
+		for warning in self.__warnings:
+			cmd.append(fmt(warning))
+
+		for sanitizer in self.__sanitizers:
+			cmd.append(fmt('fsanitize', sanitizer, '='))
+
+		for source in self.__sources:
+			cmd.append(source)
+
+		for include in self.__includes:
+			cmd.append(fmt('I', include))
+
+		for lib_path in self.__libpaths:
+			cmd.append(fmt('L', lib_path))
+
+		for lib in self.__libs:
+			cmd.append(lib)
+
+		cmd.append(fmt('o', outname))
+
+		return cmd
+
 class MSVCCompiler(Compiler):
 	__FORMAT_FLAG = '/%s'
 	__FORMAT_VALUE = '%s%s%s'
@@ -311,6 +427,10 @@ class MSVCCompiler(Compiler):
 		self.__initialize()
 
 	def __initialize(self):
+		# Check compiler compatibility.
+		if self.target() != Target.WINDOWS:
+			raise ValueError('MSVC is available only on Windows')
+
 		# No MSVC secure warnings.
 		self.__defines.append('_CRT_SECURE_NO_WARNINGS')
 
@@ -410,7 +530,7 @@ def str2compiler(s: str, t: Target) -> Compiler:
 	if name == 'clang':
 		return ClangCompiler(t)
 	elif name == 'gcc':
-		raise ValueError('GCC is temporary unsupported')
+		raise GCCCompiler(t)
 	elif name == 'msvc':
 		return MSVCCompiler(t)
 	else:
