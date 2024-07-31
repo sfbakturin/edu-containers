@@ -62,4 +62,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build and test
-        run: powershell .\extra\buildtest.ps1 "msvc" "${{ matrix.version }}"
+        run: powershell .\extra\buildtest.ps1 "msvc" "${{ matrix.version }}" "${{ env.BASE_IMAGE_NAME }}"
