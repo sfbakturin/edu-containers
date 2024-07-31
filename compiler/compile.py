@@ -648,4 +648,4 @@ command = compiler.finalize(name_executable, is_cxx)
 
 if target == Target.WINDOWS:
 	compile_as_windows(command)
-exit(subprocess.run(' '.join(command)).returncode)
+exit(subprocess.run(command).returncode)

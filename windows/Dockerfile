@@ -34,6 +34,10 @@ RUN .\install-git.ps1; Remove-Item .\install-git.ps1
 COPY windows/installers/install-python.ps1 .
 RUN .\install-python.ps1; Remove-Item .\install-python.ps1
 
+# Install PYYAML.
+COPY windows/installers/install-pyyaml.ps1 .
+RUN .\install-pyyaml.ps1; Remove-Item .\install-pyyaml.ps1
+
 # Install Ninja.
 COPY windows/installers/install-ninja.ps1 .
 RUN .\install-ninja.ps1; Remove-Item .\install-ninja.ps1
