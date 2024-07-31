@@ -11,6 +11,8 @@ apt-get update
 # Install a specific version of GCC.
 apt-get install -y --no-install-recommends gcc-"${BUILD_TARGET_VERSION}" g++-"${BUILD_TARGET_VERSION}"
 
-# Link standard CC and CXX to clang.
+# Link standard CC and CXX to gcc.
 ln -sf /usr/bin/gcc-"${BUILD_TARGET_VERSION}" /usr/bin/cc
 ln -sf /usr/bin/g++-"${BUILD_TARGET_VERSION}" /usr/bin/c++
+ln -sf /usr/bin/gcc-"${BUILD_TARGET_VERSION}" /usr/bin/gcc
+ln -sf /usr/bin/g++-"${BUILD_TARGET_VERSION}" /usr/bin/g++

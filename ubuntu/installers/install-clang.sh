@@ -16,5 +16,7 @@ bash "${LLVM_INSTALL_SCRIPT}" "${BUILD_TARGET_VERSION}"
 rm "${LLVM_INSTALL_SCRIPT}"
 
 # Link standard CC and CXX to clang.
-ln -s /usr/bin/clang-"${BUILD_TARGET_VERSION}" /usr/bin/cc
-ln -s /usr/bin/clang++-"${BUILD_TARGET_VERSION}" /usr/bin/c++
+ln -sf /usr/bin/clang-"${BUILD_TARGET_VERSION}" /usr/bin/cc
+ln -sf /usr/bin/clang++-"${BUILD_TARGET_VERSION}" /usr/bin/c++
+ln -sf /usr/bin/clang-"${BUILD_TARGET_VERSION}" /usr/bin/clang
+ln -sf /usr/bin/clang++-"${BUILD_TARGET_VERSION}" /usr/bin/clang++
