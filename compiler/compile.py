@@ -148,7 +148,7 @@ class Compiler:
 		return self.__target
 
 	@abstractmethod
-	def set_profile(self, profile: Profile):
+	def use_profile(self, profile: Profile):
 		pass
 
 	@abstractmethod
@@ -176,7 +176,7 @@ class Compiler:
 		pass
 
 	@abstractmethod
-	def finalize(self, outname: str, cxx: bool) -> str:
+	def finalize(self, outname: str, cxx: bool) -> List[str]:
 		pass
 
 class ClangCompiler(Compiler):
@@ -200,7 +200,7 @@ class ClangCompiler(Compiler):
 		# Set to Clang max warning level.
 		self.__warnings = ['Wall', 'Wextra', 'Wpedantic']
 
-	def set_profile(self, profile: Profile):
+	def use_profile(self, profile: Profile):
 		match profile:
 			case Profile.RELEASE:
 				# Generate optimized code.
@@ -317,7 +317,7 @@ class MSVCCompiler(Compiler):
 		# Set to MSVC max warning level.
 		self.__warnings.append('W4')
 
-	def set_profile(self, profile: Profile):
+	def use_profile(self, profile: Profile):
 		match profile:
 			case Profile.RELEASE:
 				# Generate optimized code.
@@ -391,12 +391,12 @@ class MSVCCompiler(Compiler):
 			cmd.append(source)
 
 		for include in self.__includes:
-			cmd.append(fmt('I', include))
+			cmd.append(fmt('I', include + '/'))
 
 		cmd.append(fmt('link'))
 
 		for lib_path in self.__libpaths:
-			cmd.append(fmt('LIBPATH', lib_path, ':'))
+			cmd.append(fmt('LIBPATH', lib_path + '/', ':'))
 
 		for lib in self.__libs:
 			cmd.append(lib)
@@ -426,7 +426,7 @@ def envname(name: str) -> str:
 def getenv(name: str) -> str:
 	name = envname(name)
 	print('Checking for %s...' % (name))
-	value = os.getenv(envname(name))
+	value = os.getenv(name)
 	if value is None:
 		raise ValueError('Environment variable \"%s\" must exist' % (name))
 	print('Checking for %s... done.' % (name))
@@ -475,8 +475,8 @@ for d in [".", "src"]:
 
 ## Build command.
 
-target: Target = str2target('windows') # FIXME: There is problem with windows target ENV.
-compiler: Compiler = str2compiler('msvc', target) # FIXME: There is problem with windows target ENV.
+target: Target = str2target(getenv('target_system'))
+compiler: Compiler = str2compiler(getenv('target_name'), target)
 
 name_executable = None
 
@@ -496,10 +496,10 @@ def set_standard(cc: Compiler, arr: List[str]):
 		raise ValueError('For using standard there\'s should be exactly one value')
 	cc.set_standard(str2std(arr[0]))
 
-def set_profile(cc: Compiler, arr: List[str]):
+def use_profile(cc: Compiler, arr: List[str]):
 	if len(arr) != 1:
 		raise ValueError('For using profile there\'s should be exactly one value')
-	cc.set_profile(arr[0])
+	cc.use_profile(str2profile(arr[0]))
 
 for i in range(1, len(sys.argv)):
 	arg = CMDElement(sys.argv[i])
@@ -509,14 +509,23 @@ for i in range(1, len(sys.argv)):
 		case "name": name_executable = vals[0]
 		case "include-libraries": include_libraries(compiler, vals)
 		case "link-libraries": link_libraries(compiler, vals)
-		case "std": set_standard(vals)
-		case "set-profile": set_profile(vals)
+		case "std": set_standard(compiler, vals)
+		case "use-profile": use_profile(compiler, vals)
 		case _: raise NotImplementedError("Flag \"%s\" is not supported" % (flag))
 
 compiler.add_sources(sources)
 if os.path.exists('include'):
 	compiler.add_include('include')
 
+# The only thing `subprocess.run` fear is Windows...
+def compile_as_windows(command: List[str]):
+	ERROR_BATCH = 'exit /b 666'
+	with open('compile.bat', 'w') as script:
+		script.write('%s || %s\n' % (' '.join(command), ERROR_BATCH))
+	exit(subprocess.run(['compile.bat'], shell = True).returncode)
+
 command = compiler.finalize(name_executable, is_cxx)
-print(' '.join(command))
-exit(subprocess.run(command).returncode)
+
+if target == Target.WINDOWS:
+	compile_as_windows(command)
+exit(subprocess.run(' '.join(command)).returncode)

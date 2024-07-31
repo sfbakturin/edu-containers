@@ -17,4 +17,6 @@ Write-Host 'Removing temporary files...';
 Remove-Item -Force $installer;
 
 Write-Host 'Installing pyyaml package...';
-pip install pyyaml;
+Start-Process -FilePath pip -Wait -ArgumentList @(
+    'install', 'pyyaml'
+);

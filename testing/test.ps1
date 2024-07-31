@@ -1,21 +1,21 @@
-echo "Hello World on C"
+Write-Output "Hello World on C"
 Copy-Item .\tests\test_helloworld.c .
 python compile.py --name=hello_world.exe --use-profile=Release
 Remove-Item test_helloworld.c
 .\hello_world.exe
 
-echo "=============================="
+Write-Output "=============================="
 
-echo "Hello World on C++"
+Write-Output "Hello World on C++"
 Copy-Item .\tests\test_helloworld.cpp .
 python compile.py --name=hello_world2.exe --use-profile=Release
 Remove-Item test_helloworld.cpp
 .\hello_world2.exe
 
-echo "=============================="
+Write-Output "=============================="
 
-echo "Basic GoogleTest"
+Write-Output "Basic GoogleTest"
 Copy-Item .\tests\test_googletest.cpp .
-python3 compile.py --name=google.exe --use-profile=Release --include-libraries=GoogleTest --link-libraries=gtest
+python compile.py --name=google.exe --use-profile=Release --include-libraries=GoogleTest --link-libraries=gtest.lib
 Remove-Item test_googletest.cpp
 .\google.exe

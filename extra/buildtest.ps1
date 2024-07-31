@@ -8,7 +8,7 @@ $compilerVersion = $args[1]
 $baseImageTag = "ltsc2019-${compilerName}${compilerVersion}"
 $imageName = "$env:BASE_IMAGE_NAME:${baseImageTag}"
 
-$containerName='buildtest'
+$containerName = 'buildtest'
 
 # Build image.
 docker build --tag "${imageName}" `
@@ -17,7 +17,8 @@ docker build --tag "${imageName}" `
     -f windows/Dockerfile .
 
 # Test image.
-# FIXME: Should run tests only if RUN_TESTS is true.
 docker run -t -d --name "$containerName" "$imageName"
-docker cp testing/. "$containerName":/student
-docker exec "$containerName" powershell test.ps1
+docker container stop "$containerName"
+docker cp .\testing\ "$containerName":/student
+docker container restart "$containerName"
+docker exec "$containerName" cmd.exe /K "powershell .\test.ps1"

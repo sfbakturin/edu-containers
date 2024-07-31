@@ -88,4 +88,4 @@ WORKDIR ${EDUCONTAINER_STUDENT}
 COPY compiler/ .
 
 # Set Powershell as entrypoint.
-ENTRYPOINT ["cmd.exe", "/K", "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\Common7\\Tools\\VsDevCmd.bat"]
+ENTRYPOINT ["cmd.exe", "/K", "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"]
