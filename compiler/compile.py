@@ -530,7 +530,7 @@ def str2compiler(s: str, t: Target) -> Compiler:
 	if name == 'clang':
 		return ClangCompiler(t)
 	elif name == 'gcc':
-		raise GCCCompiler(t)
+		return GCCCompiler(t)
 	elif name == 'msvc':
 		return MSVCCompiler(t)
 	else:
@@ -645,7 +645,8 @@ def compile_as_windows(command: List[str]):
 	exit(subprocess.run(['compile.bat'], shell = True).returncode)
 
 command = compiler.finalize(name_executable, is_cxx)
+print(' '.join(command))
 
 if target == Target.WINDOWS:
 	compile_as_windows(command)
-exit(subprocess.run(command).returncode)
+exit(subprocess.run(command, shell = True).returncode)
