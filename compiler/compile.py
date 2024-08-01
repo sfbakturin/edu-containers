@@ -288,9 +288,9 @@ class ClangCompiler(Compiler):
 			cmd.append(fmt('L', lib_path))
 
 		for lib in self.__libs:
-			cmd.append(lib)
+			cmd.append(fmt('l', lib, ''))
 
-		cmd.append(fmt('o', outname))
+		cmd.append(fmt('o', '\"' + outname + '\"'))
 
 		return cmd
 
@@ -403,7 +403,7 @@ class GCCCompiler(Compiler):
 			cmd.append(fmt('L', lib_path))
 
 		for lib in self.__libs:
-			cmd.append(lib)
+			cmd.append(fmt('l', lib, ''))
 
 		cmd.append(fmt('o', outname))
 
@@ -637,16 +637,23 @@ compiler.add_sources(sources)
 if os.path.exists('include'):
 	compiler.add_include('include')
 
-# The only thing `subprocess.run` fear is Windows...
+# FIXME: Looks like dirty...
 def compile_as_windows(command: List[str]):
 	ERROR_BATCH = 'exit /b 666'
 	with open('compile.bat', 'w') as script:
 		script.write('%s || %s\n' % (' '.join(command), ERROR_BATCH))
 	exit(subprocess.run(['compile.bat'], shell = True).returncode)
 
+# FIXME: And this looks like dirty...
+def compile_as_linux(command: List[str]):
+	ERROR_BASH = 'exit 666'
+	with open('compile.bash', 'w') as script:
+		script.write('%s || %s\n' % (' '.join(command), ERROR_BASH))
+	exit(subprocess.run(['bash', 'compile.bash']).returncode)
+
 command = compiler.finalize(name_executable, is_cxx)
 print(' '.join(command))
 
 if target == Target.WINDOWS:
 	compile_as_windows(command)
-exit(subprocess.run(command).returncode)
+compile_as_linux(command)
