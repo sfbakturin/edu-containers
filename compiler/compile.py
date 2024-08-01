@@ -649,4 +649,4 @@ print(' '.join(command))
 
 if target == Target.WINDOWS:
 	compile_as_windows(command)
-exit(subprocess.run(command, shell = True).returncode)
+exit(subprocess.run(command).returncode)
