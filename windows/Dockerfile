@@ -89,7 +89,4 @@ RUN .\install-libdeflate.ps1; Remove-Item .\install-libdeflate.ps1
 WORKDIR ${EDUCONTAINER_STUDENT}
 
 # Compiler file and default configs.
-COPY compiler/ .
-
-# Set Powershell as entrypoint.
-ENTRYPOINT ["cmd.exe", "/K", "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"]
+COPY compiler/. .

@@ -639,9 +639,11 @@ if os.path.exists('include'):
 
 # FIXME: Looks like dirty...
 def compile_as_windows(command: List[str]):
+	# TODO: Should be introduced in ENV.
+	MSVC_SETUP = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat'
 	ERROR_BATCH = 'exit /b 666'
 	with open('compile.bat', 'w') as script:
-		script.write('%s || %s\n' % (' '.join(command), ERROR_BATCH))
+		script.write('call \"%s\"\n%s || %s\n' % (MSVC_SETUP, ' '.join(command), ERROR_BATCH))
 	exit(subprocess.run(['compile.bat'], shell = True).returncode)
 
 # FIXME: And this looks like dirty...
