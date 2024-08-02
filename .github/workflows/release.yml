@@ -23,6 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 'dev'
       - name: Build image
         env:
           IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-gcc${{ matrix.version }}"
@@ -57,6 +59,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 'dev'
       - name: Build image
         env:
           IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-clang${{ matrix.version }}"
@@ -88,6 +92,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 'dev'
       - name: Build image
         env:
           IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-ltsc2019-msvc${{ matrix.version }}"
