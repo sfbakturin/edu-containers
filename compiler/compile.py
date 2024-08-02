@@ -236,7 +236,7 @@ class ClangCompiler(Compiler):
 				self.__optimizations = ['O0']
 			case _:
 				# Generate code with even more debug information.
-				self.__optimizations = ['O0', '-g']
+				self.__optimizations = ['O0', 'g']
 				# Set sanitizer.
 				if profile == Profile.ADDRESS_SANITIZED:
 					self.__sanitizers = ['address']
@@ -362,7 +362,7 @@ class GCCCompiler(Compiler):
 				self.__optimizations = ['O0']
 			case _:
 				# Generate code with even more debug information.
-				self.__optimizations = ['O0', '-g']
+				self.__optimizations = ['O0', 'g']
 				# Set sanitizer.
 				if profile == Profile.ADDRESS_SANITIZED:
 					self.__sanitizers = ['address']
