@@ -17,6 +17,7 @@ Push-Location $ffmpegSrc;
 # Copy files from include/ and lib/.
 Copy-Item include -Destination "$env:EDUCONTAINER_FFMPEG_INCLUDE" -Recurse;
 Copy-Item lib -Destination "$env:EDUCONTAINER_FFMPEG_LIBRARY" -Recurse;
+Copy-Item bin -Destination "$env:EDUCONTAINER_FFMPEG_BINARY" -Recurse;
 
 # Go back.
 Pop-Location;

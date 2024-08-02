@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import yaml
+import shutil
 
 from typing import List, Dict, Optional
 from abc import ABC, abstractmethod
@@ -35,11 +36,17 @@ class Library:
 		self.__name = self.__get_from("name", parsed)
 		self.__include_directory = self.__parsed_directory(self.__get_from("includedir", parsed), "includedir")
 		self.__library_directory = self.__parsed_directory(self.__get_from("librarydir", parsed), "librarydir")
+		self.__binary_directory = self.__get_from("binarydir", parsed, False)
+		if self.__binary_directory:
+			self.__binary_directory = self.__parsed_directory(self.__binary_directory, "binarydir")
 
 	@staticmethod
-	def __get_from(n: str, d: Dict[str, str]) -> str:
+	def __get_from(n: str, d: Dict[str, str], fail_on_not_found: bool = True) -> str:
 		if not n in d:
-			raise LookupError("In library settings there must be \"%s\" option" % (n))
+			if fail_on_not_found:
+				raise LookupError("In library settings there must be \"%s\" option" % (n))
+			else:
+				return None
 		return d[n]
 
 	@staticmethod
@@ -62,6 +69,11 @@ class Library:
 
 	def get_library(self) -> str:
 		return self.__library_directory
+
+	def get_binary(self) -> str:
+		if self.__binary_directory is None:
+			raise ValueError("Attempt to get non existing binary directory")
+		return self.__binary_directory
 
 class Target(Enum):
 	LINUX = 0
@@ -172,6 +184,10 @@ class Compiler:
 		pass
 
 	@abstractmethod
+	def as_dynamic(self):
+		pass
+
+	@abstractmethod
 	def link_library(self, libname: str):
 		pass
 
@@ -248,6 +264,9 @@ class ClangCompiler(Compiler):
 		if not os.path.exists(dirname):
 			raise ValueError('Directory \"%s\" is not exists' % (dirname))
 		self.__libpaths.append(dirname)
+
+	def as_dynamic(self):
+		raise NotImplementedError("Link libraries is not supported for Clang yet")
 
 	def link_library(self, libname: str):
 		self.__libs.append(libname)
@@ -364,6 +383,9 @@ class GCCCompiler(Compiler):
 			raise ValueError('Directory \"%s\" is not exists' % (dirname))
 		self.__libpaths.append(dirname)
 
+	def as_dynamic(self):
+		raise NotImplementedError("Link libraries is not supported for GCC yet")
+
 	def link_library(self, libname: str):
 		self.__libs.append(libname)
 
@@ -419,9 +441,11 @@ class MSVCCompiler(Compiler):
 		self.__standard: str = None
 		self.__optimizations: List[str] = []
 		self.__warnings: List[str] = []
+		self.__stdlib: List[str] = []
 		self.__sanitizers: List[str] = []
 		self.__sources: List[str] = []
 		self.__includes: List[str] = []
+		self.__dynamic: List[str] = []
 		self.__libpaths: List[str] = []
 		self.__libs: List[str] = []
 		self.__initialize()
@@ -442,12 +466,21 @@ class MSVCCompiler(Compiler):
 			case Profile.RELEASE:
 				# Generate optimized code.
 				self.__optimizations = ['O2']
+				# Use MSVC standard library.
+				# FIXME: Maybe, we should choose between static/dynamic.
+				self.__stdlib = ['MD']
 			case Profile.DEBUG:
 				# Generate code with debug information.
 				self.__optimizations = ['Od']
+				# Use MSVC standard library.
+				# FIXME: Maybe, we should choose between static/dynamic.
+				self.__stdlib = ['MDd']
 			case Profile.ADDRESS_SANITIZED:
 				# Generate code with even more debug information.
 				self.__optimizations = ['Od', 'Z7']
+				# Use MSVC standard library.
+				# FIXME: Maybe, we should choose between static/dynamic.
+				self.__stdlib = ['MDd']
 				# Turn off any strange CL's ASan behavior.
 				self.__defines = ['_DISABLE_VECTOR_ANNOTATION', '_DISABLE_STRING_ANNOTATION']
 				# Set sanitizer.
@@ -481,6 +514,9 @@ class MSVCCompiler(Compiler):
 			raise ValueError('Directory \"%s\" is not exists' % (dirname))
 		self.__libpaths.append(dirname)
 
+	def as_dynamic(self):
+		self.__dynamic = ['DYNAMICBASE']
+
 	def link_library(self, libname: str):
 		self.__libs.append(libname)
 
@@ -489,6 +525,9 @@ class MSVCCompiler(Compiler):
 			prefix = self.__FORMAT_FLAG % (flag)
 			if value is None: return prefix
 			return self.__FORMAT_VALUE % (prefix, sep, value)
+
+		if len(self.__optimizations) == 0:
+			raise ValueError('Flag --use-profile is required')
 
 		cmd: List[str] = ['cl', fmt('EHsc')]
 
@@ -500,6 +539,9 @@ class MSVCCompiler(Compiler):
 
 		for optimization in self.__optimizations:
 			cmd.append(fmt(optimization))
+
+		for stdlib in self.__stdlib:
+			cmd.append(fmt(stdlib))
 
 		for warning in self.__warnings:
 			cmd.append(fmt(warning))
@@ -517,6 +559,9 @@ class MSVCCompiler(Compiler):
 
 		for lib_path in self.__libpaths:
 			cmd.append(fmt('LIBPATH', lib_path + '/', ':'))
+
+		for d in self.__dynamic:
+			cmd.append(fmt(d))
 
 		for lib in self.__libs:
 			cmd.append(lib)
@@ -597,13 +642,14 @@ for d in [".", "src"]:
 
 target: Target = str2target(getenv('target_system'))
 compiler: Compiler = str2compiler(getenv('target_name'), target)
+as_msvc_dynamic_base: List[str] = []
 
 name_executable = None
 
 def include_libraries(cc: Compiler, arr: List[str]):
 	for a in arr:
 		if not a in libs:
-			raise ValueError('Library \"%s\" no found in loader' % (a))
+			raise ValueError('Library \"%s\" not found in loader' % (a))
 		cc.add_libpath(libs[a].get_library())
 		cc.add_include(libs[a].get_include())
 
@@ -621,6 +667,13 @@ def use_profile(cc: Compiler, arr: List[str]):
 		raise ValueError('For using profile there\'s should be exactly one value')
 	cc.use_profile(str2profile(arr[0]))
 
+def as_dynamic(cc: Compiler, arr: List[str], dynamic_base: List[str]):
+	cc.as_dynamic()
+	for a in arr:
+		if not a in libs:
+			raise ValueError('Library \"%s\" not found in loader' % (a))
+		dynamic_base.append(libs[a].get_binary())
+
 for i in range(1, len(sys.argv)):
 	arg = CMDElement(sys.argv[i])
 	flag = arg.get_flag()
@@ -631,6 +684,7 @@ for i in range(1, len(sys.argv)):
 		case "link-libraries": link_libraries(compiler, vals)
 		case "std": set_standard(compiler, vals)
 		case "use-profile": use_profile(compiler, vals)
+		case "as-dynamic": as_dynamic(compiler, vals, as_msvc_dynamic_base)
 		case _: raise NotImplementedError("Flag \"%s\" is not supported" % (flag))
 
 compiler.add_sources(sources)
@@ -638,11 +692,20 @@ if os.path.exists('include'):
 	compiler.add_include('include')
 
 # FIXME: Looks like dirty...
-def compile_as_windows(command: List[str]):
+def compile_as_windows(command: List[str], dynamic: List[str]):
 	# TODO: Should be introduced in ENV.
 	MSVC_SETUP = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat'
 	ERROR_BATCH = 'exit /b 666'
 	with open('compile.bat', 'w') as script:
+		current_working_directory = os.getcwd()
+		for d in dynamic:
+			if not os.path.exists(d):
+				raise FileNotFoundError('Provided path with binaries \"%s\" not found' % (d))
+			for f in os.listdir(d):
+				p = os.path.join(d, f)
+				if p.endswith(".dll"):
+					n = os.path.join(current_working_directory, f)
+					shutil.copyfile(p, n)
 		script.write('call \"%s\"\n%s || %s\n' % (MSVC_SETUP, ' '.join(command), ERROR_BATCH))
 	exit(subprocess.run(['compile.bat'], shell = True).returncode)
 
@@ -657,5 +720,5 @@ command = compiler.finalize(name_executable, is_cxx)
 print(' '.join(command))
 
 if target == Target.WINDOWS:
-	compile_as_windows(command)
+	compile_as_windows(command, as_msvc_dynamic_base)
 compile_as_linux(command)
