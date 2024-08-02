@@ -462,6 +462,7 @@ class MSVCCompiler(Compiler):
 		self.__dynamic: List[str] = []
 		self.__libpaths: List[str] = []
 		self.__libs: List[str] = []
+		self.__needs_debug = True
 		self.__initialize()
 
 	def __initialize(self):
@@ -480,21 +481,19 @@ class MSVCCompiler(Compiler):
 			case Profile.RELEASE:
 				# Generate optimized code.
 				self.__optimizations = ['O2']
-				# Use MSVC standard library.
-				# FIXME: Maybe, we should choose between static/dynamic.
-				self.__stdlib = ['MD']
+				# Use MSVC standard library. Default: use static
+				self.__stdlib = ['MT']
+				self.__needs_debug = False
 			case Profile.DEBUG:
 				# Generate code with debug information.
 				self.__optimizations = ['Od']
-				# Use MSVC standard library.
-				# FIXME: Maybe, we should choose between static/dynamic.
-				self.__stdlib = ['MDd']
+				# Use MSVC standard library for debugging. Default: use static.
+				self.__stdlib = ['MTd']
 			case Profile.ADDRESS_SANITIZED:
 				# Generate code with even more debug information.
 				self.__optimizations = ['Od', 'Z7']
-				# Use MSVC standard library.
-				# FIXME: Maybe, we should choose between static/dynamic.
-				self.__stdlib = ['MDd']
+				# Use MSVC standard library for debugging. Default: use static.
+				self.__stdlib = ['MTd']
 				# Turn off any strange CL's ASan behavior.
 				self.__defines = ['_DISABLE_VECTOR_ANNOTATION', '_DISABLE_STRING_ANNOTATION']
 				# Set sanitizer.
@@ -529,7 +528,13 @@ class MSVCCompiler(Compiler):
 		self.__libpaths.append(dirname)
 
 	def as_dynamic(self):
+		# All .lib will be threated as dynamic-base
 		self.__dynamic = ['DYNAMICBASE']
+		# Use MSVC standard library for dynamic.
+		if self.__needs_debug:
+			self.__stdlib = ['MDd']
+		else:
+			self.__stdlib = ['MD']
 
 	def link_library(self, libname: str):
 		self.__libs.append(libname)
