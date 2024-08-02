@@ -116,6 +116,7 @@ def str2profile(s: str) -> Profile:
 		case 'LeakSanitized': return Profile.LEAK_SANITIZED
 		case 'UndefinedBehaviorSanitized': return Profile.UNDEFINED_BEHAVIOR_SANITIZED
 		case 'ThreadSanitized': return Profile.THREAD_SANITIZED
+		case 'MemorySanitized': return Profile.MEMORY_SANITIZED
 		case _: raise ValueError('Unsupported compile profile \"%s\" found' % (s))
 
 class STD(Enum):
