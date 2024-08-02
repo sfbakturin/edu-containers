@@ -38,7 +38,7 @@ class Library:
 		self.__library_directory = self.__parsed_directory(self.__get_from("librarydir", parsed), "librarydir")
 		self.__binary_directory = self.__get_from("binarydir", parsed, False)
 		if self.__binary_directory:
-			self.__binary_directory = self.__parsed_directory(self.__binary_directory, "binarydir")
+			self.__binary_directory = self.__parsed_directory(self.__binary_directory, "binarydir", False)
 
 	@staticmethod
 	def __get_from(n: str, d: Dict[str, str], fail_on_not_found: bool = True) -> str:
@@ -50,15 +50,19 @@ class Library:
 		return d[n]
 
 	@staticmethod
-	def __parsed_directory(d: str, d_name: str) -> str:
+	def __parsed_directory(d: str, d_name: str, fail_on_not_found: bool = True) -> str:
 		asenv = os.getenv(d)
 		if asenv is None:
-			if not os.path.exists(d):
+			if not os.path.exists(d) and fail_on_not_found:
 				raise FileNotFoundError("Provided path and env-as-path \"%s\" as %s not exists" % (d, d_name))
+			elif not os.path.exists(d):
+				return None
 			return d
 		else:
-			if not os.path.exists(asenv):
+			if not os.path.exists(asenv) and fail_on_not_found:
 				raise FileNotFoundError("Provided \"%s\" as %s not exists" % (asenv, d_name))
+			elif not os.path.exists(asenv):
+				return None
 			return asenv
 
 	def get_name(self) -> str:
@@ -206,9 +210,11 @@ class ClangCompiler(Compiler):
 		self.__optimizations: List[str] = []
 		self.__warnings: List[str] = []
 		self.__sanitizers: List[str] = []
+		self.__additional_compile_flags: List[str] = []
 		self.__sources: List[str] = []
 		self.__includes: List[str] = []
 		self.__libpaths: List[str] = []
+		self.__additional_linkage_flags: List[str] = []
 		self.__libs: List[str] = []
 		self.__initialize()
 
@@ -242,6 +248,8 @@ class ClangCompiler(Compiler):
 					self.__sanitizers = ['thread']
 				else:
 					self.__sanitizers = ['memory']
+					self.__additional_compile_flags = ['fPIE']
+					self.__additional_linkage_flags = ['pie']
 
 	def set_standard(self, std: STD):
 		self.__standard = std2str(std)
@@ -297,6 +305,9 @@ class ClangCompiler(Compiler):
 		for sanitizer in self.__sanitizers:
 			cmd.append(fmt('fsanitize', sanitizer, '='))
 
+		for compile_flag in self.__additional_compile_flags:
+			cmd.append(fmt(compile_flag))
+
 		for source in self.__sources:
 			cmd.append(source)
 
@@ -305,6 +316,9 @@ class ClangCompiler(Compiler):
 
 		for lib_path in self.__libpaths:
 			cmd.append(fmt('L', lib_path))
+
+		for linkage_flag in self.__additional_linkage_flags:
+			cmd.append(fmt(linkage_flag))
 
 		for lib in self.__libs:
 			cmd.append(fmt('l', lib, ''))
