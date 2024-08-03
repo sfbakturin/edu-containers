@@ -54,7 +54,7 @@ ENV EDUCONTAINER_ZLIB_LIBRARY=${EDUCONTAINER_ZLIB}/lib
 ENV EDUCONTAINER_ZLIB_BINARY=${EDUCONTAINER_ZLIB}/bin
 
 COPY windows/installers/install-zlib.ps1 .
-RUN .\install-zlib.ps1; Remove-Item .\install-zlib.ps1 ${EDUCONATINER_BUILDTYPE}
+RUN .\install-zlib.ps1 ${EDUCONATINER_BUILDTYPE}; Remove-Item .\install-zlib.ps1
 
 ## Install GoogleTest.
 ENV EDUCONTAINER_GOOGLETEST=${EDUCONTAINER_THIRDPARTY}/googletest
@@ -62,7 +62,7 @@ ENV EDUCONTAINER_GOOGLETEST_INCLUDE=${EDUCONTAINER_GOOGLETEST}/include
 ENV EDUCONTAINER_GOOGLETEST_LIBRARY=${EDUCONTAINER_GOOGLETEST}/lib
 
 COPY windows/installers/install-gtest.ps1 .
-RUN .\install-gtest.ps1; Remove-Item .\install-gtest.ps1 ${EDUCONATINER_BUILDTYPE}
+RUN .\install-gtest.ps1 ${EDUCONATINER_BUILDTYPE}; Remove-Item .\install-gtest.ps1
 
 ## Install FFmpeg.
 ENV EDUCONTAINER_FFMPEG=${EDUCONTAINER_THIRDPARTY}/ffmpeg
@@ -80,7 +80,7 @@ ENV EDUCONTAINER_FFTW_LIBRARY=${EDUCONTAINER_FFTW}/lib
 ENV EDUCONTAINER_FFTW_BINARY=${EDUCONTAINER_FFTW}/bin
 
 COPY windows/installers/install-fftw.ps1 .
-RUN .\install-fftw.ps1; Remove-Item .\install-fftw.ps1 ${EDUCONATINER_BUILDTYPE}
+RUN .\install-fftw.ps1 ${EDUCONATINER_BUILDTYPE}; Remove-Item .\install-fftw.ps1
 
 ## Install libdeflate.
 ENV EDUCONTAINER_LIBDEFLATE=${EDUCONTAINER_THIRDPARTY}/libdeflate
@@ -89,7 +89,7 @@ ENV EDUCONTAINER_LIBDEFLATE_LIBRARY=${EDUCONTAINER_LIBDEFLATE}/lib
 ENV EDUCONTAINER_LIBDEFLATE_BINARY=${EDUCONTAINER_LIBDEFLATE}/bin
 
 COPY windows/installers/install-libdeflate.ps1 .
-RUN .\install-libdeflate.ps1; Remove-Item .\install-libdeflate.ps1 ${EDUCONATINER_BUILDTYPE}
+RUN .\install-libdeflate.ps1 ${EDUCONATINER_BUILDTYPE}; Remove-Item .\install-libdeflate.ps1
 
 # Student entry point.
 WORKDIR ${EDUCONTAINER_STUDENT}
