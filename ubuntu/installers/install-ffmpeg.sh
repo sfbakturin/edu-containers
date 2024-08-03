@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -14,11 +14,14 @@ git clone "${FFMPEG_URL}" -b "${FFMPEG_VERSION}" "${FFMPEG_SRC}"
 pushd "${FFMPEG_SRC}"
 
 # Build FFMPEG.
-./configure --cc="${COMPILER_NAME}-${COMPILER_VERSION}" --cxx="${COMPILER_NAMEXX}-${COMPILER_VERSION}" --disable-x86asm --prefix="${EDU_FFMPEG}"
+./configure --cc="${BUILD_TARGET_NAME}-${BUILD_TARGET_VERSION}" \
+            --cxx="${BUILD_TARGET_NAMEXX}-${BUILD_TARGET_VERSION}" \
+            --disable-x86asm \
+            --prefix="${EDUCONTAINER_FFMPEG}"
 make -j"$(nproc --all)"
 
-# If RUN_TESTS == true, then we should test FFMPEG.
-if $RUN_TESTS
+# If BUILD_EXTRAS_RUN_TESTS == true, then we should test FFMPEG.
+if $BUILD_EXTRAS_RUN_TESTS
 then
   ## Test FFMPEG.
   make fate

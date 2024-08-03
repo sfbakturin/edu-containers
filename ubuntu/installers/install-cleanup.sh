@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Cleaning up caches from APT.
 apt-get autoremove -y --purge

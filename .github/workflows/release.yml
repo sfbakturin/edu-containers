@@ -2,38 +2,100 @@ name: Build and publish Docker images
 
 on: workflow_dispatch
 
+env:
+  BASE_IMAGE_NAME: "${{ vars.HUB_USERNAME }}/educontainer"
+
 jobs:
-  release:
-    name: "Building and publishing image (${{matrix.compiler.name}})"
+  ubuntu-gcc:
+    name: "Building and publishing image (Ubuntu: GCC ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
       matrix:
-        compiler:
-          - {name: Clang 18, cc: clang, cxx: clang++, version: 18}
-          - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
-          - {name: Clang 16, cc: clang, cxx: clang++, version: 16}
-          - {name: Clang 15, cc: clang, cxx: clang++, version: 15}
-          - {name: GCC 13, cc: gcc, cxx: g++, version: 13}
-          - {name: GCC 12, cc: gcc, cxx: g++, version: 12}
-          - {name: GCC 11, cc: gcc, cxx: g++, version: 11}
-          - {name: GCC 10, cc: gcc, cxx: g++, version: 10}
-          - {name: GCC 9, cc: gcc, cxx: g++, version: 9}
+        version:
+          - 13
+          - 12
+          - 11
+          - 10
+          - 9
 
     runs-on: ubuntu-latest
 
-    env:
-      IMAGE_NAME: "${{vars.HUB_USERNAME}}/educontainer"
-      IMAGE_TAG: "${{matrix.compiler.cc}}${{matrix.compiler.version}}"
-
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker build --tag "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} -f ubuntu/Dockerfile .
+        with:
+          ref: 'dev'
+      - name: Build image
+        env:
+          IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-gcc${{ matrix.version }}"
+        run: docker build --tag "${{ env.IMAGE_NAME }}" --build-arg BUILD_TARGET_NAME=gcc --build-arg BUILD_TARGET_NAMEXX=g++ --build-arg BUILD_TARGET_VERSION=${{ matrix.version }} -f ubuntu/Dockerfile .
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{vars.HUB_USERNAME}}
-          password: ${{secrets.HUB_PASSWORD}}
+          username: ${{ vars.HUB_USERNAME }}
+          password: ${{ secrets.HUB_PASSWORD }}
       - name: Publish to Docker Hub
-        run: docker push "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"
+        env:
+          IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-gcc${{ matrix.version }}"
+        run: docker push "${{ env.IMAGE_NAME }}"
+
+  ubuntu-clang:
+    name: "Building and publishing image (Ubuntu: Clang ${{ matrix.version }})"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        version:
+          - 18
+          - 17
+          - 16
+          - 15
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'dev'
+      - name: Build image
+        env:
+          IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-clang${{ matrix.version }}"
+        run: docker build --tag "${{ env.IMAGE_NAME }}" --build-arg BUILD_TARGET_NAME=clang --build-arg BUILD_TARGET_NAMEXX=clang++ --build-arg BUILD_TARGET_VERSION=${{ matrix.version }} -f ubuntu/Dockerfile .
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.HUB_USERNAME }}
+          password: ${{ secrets.HUB_PASSWORD }}
+      - name: Publish to Docker Hub
+        env:
+          IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-clang${{ matrix.version }}"
+        run: docker push "${{ env.IMAGE_NAME }}"
+
+  windows-msvc:
+    name: "Building and publishing image (Windows: MSVC ${{ matrix.version }})"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        version:
+          - 17
+
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'dev'
+      - name: Build image
+        env:
+          IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-ltsc2019-msvc${{ matrix.version }}"
+        run: docker build --tag "${{ env.IMAGE_NAME }}" --build-arg BUILD_TARGET_VERSION=${{ matrix.version }} -f windows/Dockerfile .
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.HUB_USERNAME }}
+          password: ${{ secrets.HUB_PASSWORD }}
+      - name: Publish to Docker Hub
+        env:
+          IMAGE_NAME: "${{ env.BASE_IMAGE_NAME }}:dev-ltsc2019-msvc${{ matrix.version }}"
+        run: docker push "${{ env.IMAGE_NAME }}"

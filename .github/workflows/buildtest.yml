@@ -3,39 +3,63 @@ name: Build and test Docker images
 on: push
 
 env:
-  RUN_TESTS:
-    true
+  RUN_TESTS: true
+  BASE_IMAGE_NAME: "${{ vars.HUB_USERNAME }}/educontainer"
 
 jobs:
-  ubuntu:
-    name: "Building and testing image (Ubuntu: ${{matrix.compiler.name}})"
+  ubuntu-gcc:
+    name: "Building and testing image (Ubuntu: GCC ${{ matrix.version }})"
 
     strategy:
       fail-fast: true
       matrix:
-        compiler:
-          - {name: Clang 18, cc: clang, cxx: clang++, version: 18}
-          - {name: Clang 17, cc: clang, cxx: clang++, version: 17}
-          - {name: Clang 16, cc: clang, cxx: clang++, version: 16}
-          - {name: Clang 15, cc: clang, cxx: clang++, version: 15}
-          - {name: GCC 13, cc: gcc, cxx: g++, version: 13}
-          - {name: GCC 12, cc: gcc, cxx: g++, version: 12}
-          - {name: GCC 11, cc: gcc, cxx: g++, version: 11}
-          - {name: GCC 10, cc: gcc, cxx: g++, version: 10}
-          - {name: GCC 9, cc: gcc, cxx: g++, version: 9}
+        version:
+          - 13
+          - 12
+          - 11
+          - 10
+          - 9
 
     runs-on: ubuntu-latest
 
-    env:
-      IMAGE_NAME: "${{vars.HUB_USERNAME}}/educontainer"
-      IMAGE_TAG: "${{matrix.compiler.cc}}${{matrix.compiler.version}}"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        run: bash extra/buildtest.sh "gcc" "g++" "${{ matrix.version }}"
+
+  ubuntu-clang:
+    name: "Building and testing image (Ubuntu: Clang ${{ matrix.version }})"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        version:
+          - 18
+          - 17
+          - 16
+          - 15
+
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker build --tag "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}" --build-arg COMPILER_NAME=${{matrix.compiler.cc}} --build-arg COMPILER_NAMEXX=${{matrix.compiler.cxx}} --build-arg COMPILER_VERSION=${{matrix.compiler.version}} --build-arg RUN_TESTS=${{env.RUN_TESTS}} -f ubuntu/Dockerfile .
-      - name: Test Docker image
-        run: |
-          docker run -t -d --name testing "${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"
-          docker cp testing/. testing:/student
-          docker exec testing bash test.sh
+      - name: Build and test
+        run: bash extra/buildtest.sh "clang" "clang++" "${{ matrix.version }}"
+
+  windows-msvc:
+    name: "Building and testing image (Windows: MSVC ${{ matrix.version }})"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        version:
+          - 17
+          # - 16
+          # - 15
+
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        run: powershell .\extra\buildtest.ps1 "msvc" "${{ matrix.version }}" "${{ env.BASE_IMAGE_NAME }}"

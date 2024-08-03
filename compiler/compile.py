@@ -2,8 +2,11 @@ import os
 import sys
 import subprocess
 import yaml
+import shutil
 
-from typing import List, Dict
+from typing import List, Dict, Optional
+from abc import ABC, abstractmethod
+from enum import Enum
 
 # compile.py is a utility script created exclusively for `edu-containers` (https://github.com/sfbakturin/edu-containers)
 # that generates and runs the compile command.
@@ -15,156 +18,608 @@ class CMDElement:
 		xs = x.split("=")
 		if len(xs) != 2:
 			raise ValueError("String for CMDElement should have format as \"--<flag>=<value>\"")
-		self.__CMDElement_flag = xs[0]
-		if self.__CMDElement_flag.startswith("--"):
-			self.__CMDElement_flag = self.__CMDElement_flag[2:]
+		self.__flag = xs[0]
+		if self.__flag.startswith("--"):
+			self.__flag = self.__flag[2:]
 		else:
 			raise ValueError("Flag for CMDElement should have format as \"--<char sequence>\"")
-		self.__CMDElement_values = xs[1].split(",")
+		self.__values = xs[1].split(",")
 
 	def get_flag(self) -> str:
-		return self.__CMDElement_flag
+		return self.__flag
 
 	def get_values(self) -> List[str]:
-		return self.__CMDElement_values
+		return self.__values
 
 class Library:
 	def __init__(self, parsed: Dict[str, str]):
-		self.__Library_name = self.__Library_get_from("name", parsed)
-		self.__Library_includedir = self.__Library_parsed_dir(self.__Library_get_from("includedir", parsed), "includedir")
-		self.__Library_librarydir = self.__Library_parsed_dir(self.__Library_get_from("librarydir", parsed), "librarydir")
+		self.__name = self.__get_from("name", parsed)
+		self.__include_directory = self.__parsed_directory(self.__get_from("includedir", parsed), "includedir")
+		self.__library_directory = self.__parsed_directory(self.__get_from("librarydir", parsed), "librarydir")
+		self.__binary_directory = self.__get_from("binarydir", parsed, False)
+		if self.__binary_directory:
+			self.__binary_directory = self.__parsed_directory(self.__binary_directory, "binarydir", False)
 
 	@staticmethod
-	def __Library_get_from(n: str, d: Dict[str, str]) -> str:
+	def __get_from(n: str, d: Dict[str, str], fail_on_not_found: bool = True) -> str:
 		if not n in d:
-			raise LookupError("In library settings there must be \"%s\" option" % (n))
+			if fail_on_not_found:
+				raise LookupError("In library settings there must be \"%s\" option" % (n))
+			else:
+				return None
 		return d[n]
 
 	@staticmethod
-	def __Library_parsed_dir(d: str, d_name: str) -> str:
+	def __parsed_directory(d: str, d_name: str, fail_on_not_found: bool = True) -> str:
 		asenv = os.getenv(d)
 		if asenv is None:
-			if not os.path.exists(d):
+			if not os.path.exists(d) and fail_on_not_found:
 				raise FileNotFoundError("Provided path and env-as-path \"%s\" as %s not exists" % (d, d_name))
+			elif not os.path.exists(d):
+				return None
 			return d
 		else:
-			if not os.path.exists(asenv):
+			if not os.path.exists(asenv) and fail_on_not_found:
 				raise FileNotFoundError("Provided \"%s\" as %s not exists" % (asenv, d_name))
+			elif not os.path.exists(asenv):
+				return None
 			return asenv
 
-	def name(self) -> str:
-		return self.__Library_name
+	def get_name(self) -> str:
+		return self.__name
 
-	def includedir(self) -> str:
-		return self.__Library_includedir
+	def get_include(self) -> str:
+		return self.__include_directory
 
-	def librarydir(self) -> str:
-		return self.__Library_librarydir
+	def get_library(self) -> str:
+		return self.__library_directory
 
-class CCBuilder:
-	def __init__(self, is_cxx: bool, name_executable: str = None):
-		self.__CCBuilder_is_cxx = is_cxx
-		self.__CCBuilder_name_executable = name_executable
-		self.__CCBuilder_std_flags = []
-		self.__CCBuilder_bt_flags = []
-		self.__CCBuilder_san_flags = []
-		self.__CCBuilder_warn_flags = ["-Wall", "-Wextra", "-Wpedantic"]
-		self.__CCBuilder_comp_flags =[]
-		self.__CCBuilder_inc_flags = []
-		self.__CCBuilder_src_flags = []
-		self.__CCBuilder_lib_flags = []
-		self.__CCBuilder_ld_flags = []
+	def get_binary(self) -> str:
+		if self.__binary_directory is None:
+			raise ValueError("Attempt to get non existing binary directory")
+		return self.__binary_directory
 
-	def set_release(self):
-		self.__CCBuilder_bt_flags = ["-O2"]
+class Target(Enum):
+	LINUX = 0
+	WINDOWS = 1
 
-	def set_debug(self):
-		self.__CCBuilder_bt_flags = ["-O0", "-g"]
+def str2target(s: str) -> Target:
+	name = s.lower()
+	if name == 'windows':
+		return Target.WINDOWS
+	elif name == 'linux':
+		return Target.LINUX
+	else:
+		raise ValueError('Unsupported defined operating system \"%s\" found' % (s))
 
-	def set_sanitizer(self, name_sanitize: str):
-		self.__CCBuilder_san_flags = ["-fno-sanitize-recover=all", "-fsanitize=" + name_sanitize]
+def target2str(t: Target) -> str:
+	match t:
+		case Target.LINUX:
+			return 'Linux'
+		case Target.WINDOWS:
+			return 'Windows'
 
-	def set_name_executable(self, name_executable: str):
-		self.__CCBuilder_name_executable = name_executable
+class Profile(Enum):
+	RELEASE = 0
+	DEBUG = 1
+	ADDRESS_SANITIZED = 2
+	LEAK_SANITIZED = 3
+	UNDEFINED_BEHAVIOR_SANITIZED = 4
+	THREAD_SANITIZED = 5
+	MEMORY_SANITIZED = 6
 
-	def set_standard(self, std: str):
-		self.__CCBuilder_std_flags = ["--std=" + std]
+def str2profile(s: str) -> Profile:
+	match s:
+		case 'Release': return Profile.RELEASE
+		case 'Debug': return Profile.DEBUG
+		case 'AddressSanitized': return Profile.ADDRESS_SANITIZED
+		case 'LeakSanitized': return Profile.LEAK_SANITIZED
+		case 'UndefinedBehaviorSanitized': return Profile.UNDEFINED_BEHAVIOR_SANITIZED
+		case 'ThreadSanitized': return Profile.THREAD_SANITIZED
+		case 'MemorySanitized': return Profile.MEMORY_SANITIZED
+		case _: raise ValueError('Unsupported compile profile \"%s\" found' % (s))
 
-	def add_compile_flag(self, flag: str):
-		self.__CCBuilder_comp_flags.append("-" + flag)
+class STD(Enum):
+	CC99 = 0
+	CC11 = 1
+	CC17 = 2
+	CC23 = 3
+	CXX11 = 4
+	CXX14 = 5
+	CXX17 = 6
+	CXX20 = 7
+	CXX23 = 8
 
-	def add_link_flag(self, flag: str):
-		self.__CCBuilder_ld_flags.append("-" + flag)
+def str2std(s: str) -> STD:
+	match s:
+		case 'c99': return STD.CC99
+		case 'c11': return STD.CC11
+		case 'c17': return STD.CC17
+		case 'c23': return STD.CC23
+		case 'c++11': return STD.CXX11
+		case 'c++14': return STD.CXX14
+		case 'c++17': return STD.CXX17
+		case 'c++20': return STD.CXX20
+		case 'c++23': return STD.CXX23
+		case _: raise ValueError('Unsupported C/C++ standard \"%s\" found' % (s))
 
-	def include_headers(self, path_include: str, is_library: bool):
-		if is_library:
-			self.__CCBuilder_inc_flags.append("-isystem")
-		else:
-			self.__CCBuilder_inc_flags.append("-I")
-		if not os.path.exists(path_include):
-			raise ValueError("Provided path for including headers \"%s\" is not exists" % (path_include))
-		self.__CCBuilder_inc_flags.append(path_include)
+def std2str(s: str) -> STD:
+	match s:
+		case STD.CC99: return 'c99'
+		case STD.CC11: return 'c11'
+		case STD.CC17: return 'c17'
+		case STD.CC23: return 'c23'
+		case STD.CXX11: return 'c++11'
+		case STD.CXX14: return 'c++14'
+		case STD.CXX17: return 'c++17'
+		case STD.CXX20: return 'c++20'
+		case STD.CXX23: return 'c++23'
 
-	def add_library(self, path_include: str):
-		if not os.path.exists(path_include):
-			raise ValueError("Provided path for including libraries \"%s\" is not exists" % (path_include))
-		self.__CCBuilder_lib_flags.append("-L")
-		self.__CCBuilder_lib_flags.append(path_include)
+# Compilers.
 
-	def add_source(self, path_source: str):
-		if not os.path.exists(path_source):
-			raise ValueError("Source \"%s\" is not exists" % (path_source))
-		self.__CCBuilder_src_flags.append(path_source)
+class Compiler:
+	def __init__(self, target: Target):
+		self.__target = target
 
-	def add_sources(self, path_sources: List[str]):
-		for p in path_sources:
+	def target(self) -> Target:
+		return self.__target
+
+	@abstractmethod
+	def use_profile(self, profile: Profile):
+		pass
+
+	@abstractmethod
+	def set_standard(self, std: STD):
+		pass
+
+	@abstractmethod
+	def add_source(self, filename: str):
+		pass
+
+	@abstractmethod
+	def add_sources(self, filenames: List[str]):
+		pass
+
+	@abstractmethod
+	def add_include(self, dirname: str):
+		pass
+
+	@abstractmethod
+	def add_libpath(self, dirname: str):
+		pass
+
+	@abstractmethod
+	def as_dynamic(self):
+		pass
+
+	@abstractmethod
+	def link_library(self, libname: str):
+		pass
+
+	@abstractmethod
+	def finalize(self, outname: str, cxx: bool) -> List[str]:
+		pass
+
+class ClangCompiler(Compiler):
+	__FORMAT_FLAG = '-%s'
+	__FORMAT_VALUE = '%s%s%s'
+
+	def __init__(self, target: Target):
+		super().__init__(target)
+		self.__defines: List[str] = []
+		self.__standard: str = None
+		self.__optimizations: List[str] = []
+		self.__warnings: List[str] = []
+		self.__sanitizers: List[str] = []
+		self.__additional_compile_flags: List[str] = []
+		self.__sources: List[str] = []
+		self.__includes: List[str] = []
+		self.__libpaths: List[str] = []
+		self.__additional_linkage_flags: List[str] = []
+		self.__libs: List[str] = []
+		self.__initialize()
+
+	def __initialize(self):
+		# Check compiler compatibility.
+		if self.target() != Target.LINUX:
+			raise NotImplementedError('Clang compiler is supported only on Linux yet')
+
+		# Set to Clang max warning level.
+		self.__warnings = ['Wall', 'Wextra', 'Wpedantic']
+
+	def use_profile(self, profile: Profile):
+		match profile:
+			case Profile.RELEASE:
+				# Generate optimized code.
+				self.__optimizations = ['O2']
+			case Profile.DEBUG:
+				# Generate code with debug information.
+				self.__optimizations = ['O0']
+			case _:
+				# Generate code with even more debug information.
+				self.__optimizations = ['O0', 'g']
+				# Set sanitizer.
+				if profile == Profile.ADDRESS_SANITIZED:
+					self.__sanitizers = ['address']
+				elif profile == Profile.LEAK_SANITIZED:
+					self.__sanitizers = ['leak']
+				elif profile == Profile.UNDEFINED_BEHAVIOR_SANITIZED:
+					self.__sanitizers = ['undefined']
+				elif profile == Profile.THREAD_SANITIZED:
+					self.__sanitizers = ['thread']
+				else:
+					self.__sanitizers = ['memory']
+					self.__additional_compile_flags = ['fPIE']
+					self.__additional_linkage_flags = ['pie']
+
+	def set_standard(self, std: STD):
+		self.__standard = std2str(std)
+
+	def add_source(self, filename: str):
+		if not os.path.exists(filename):
+			raise ValueError('File \"%s\" is not exists' % (filename))
+		self.__sources.append(filename)
+
+	def add_sources(self, filenames: List[str]):
+		for p in filenames:
 			self.add_source(p)
 
-	def link_library(self, name_library: str):
-		self.__CCBuilder_ld_flags.append("-l" + name_library)
+	def add_include(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__includes.append(dirname)
 
-	def get_command(self) -> List[str]:
+	def add_libpath(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__libpaths.append(dirname)
+
+	def as_dynamic(self):
+		raise NotImplementedError("Link libraries is not supported for Clang yet")
+
+	def link_library(self, libname: str):
+		self.__libs.append(libname)
+
+	def finalize(self, outname: str, cxx: bool) -> List[str]:
+		def fmt(flag: str, value: Optional[str] = None, sep: str = ' ') -> str:
+			prefix = self.__FORMAT_FLAG % (flag)
+			if value is None: return prefix
+			return self.__FORMAT_VALUE % (prefix, sep, value)
+
 		cmd: List[str] = []
 
-		if self.__CCBuilder_is_cxx:
-			cmd = ["c++"]
-		else:
-			cmd = ["cc"]
+		if cxx: cmd = ['clang++']
+		else: cmd = ['clang']
 
-		if len(self.__CCBuilder_std_flags) != 0:
-			cmd += self.__CCBuilder_std_flags
+		for define in self.__defines:
+			cmd.append(fmt('D', define, ''))
 
-		if len(self.__CCBuilder_bt_flags) == 0:
-			raise ValueError("Command for compiling should be provided by build-type")
-		cmd += self.__CCBuilder_bt_flags
+		if self.__standard:
+			cmd.append(fmt('std', self.__standard, '='))
 
-		if len(self.__CCBuilder_san_flags) != 0:
-			cmd += self.__CCBuilder_san_flags
+		for optimization in self.__optimizations:
+			cmd.append(fmt(optimization))
 
-		cmd += self.__CCBuilder_warn_flags
+		for warning in self.__warnings:
+			cmd.append(fmt(warning))
 
-		if len(self.__CCBuilder_comp_flags) != 0:
-			cmd += self.__CCBuilder_comp_flags
+		for sanitizer in self.__sanitizers:
+			cmd.append(fmt('fsanitize', sanitizer, '='))
 
-		if len(self.__CCBuilder_inc_flags):
-			cmd += self.__CCBuilder_inc_flags
+		for compile_flag in self.__additional_compile_flags:
+			cmd.append(fmt(compile_flag))
 
-		if len(self.__CCBuilder_src_flags) == 0:
-			raise ValueError("No sources were provided to compile command")
-		cmd += self.__CCBuilder_src_flags
-	
-		if len(self.__CCBuilder_lib_flags) != 0:
-			cmd += self.__CCBuilder_lib_flags
+		for source in self.__sources:
+			cmd.append(source)
 
-		if self.__CCBuilder_name_executable is None:
-			raise ValueError("Unknown executable name")
+		for include in self.__includes:
+			cmd.append(fmt('I', include))
 
-		cmd += ["-o", self.__CCBuilder_name_executable]
+		for lib_path in self.__libpaths:
+			cmd.append(fmt('L', lib_path))
 
-		if len(self.__CCBuilder_ld_flags) != 0:
-			cmd += self.__CCBuilder_ld_flags
+		for linkage_flag in self.__additional_linkage_flags:
+			cmd.append(fmt(linkage_flag))
+
+		for lib in self.__libs:
+			cmd.append(fmt('l', lib, ''))
+
+		cmd.append(fmt('o', '\"' + outname + '\"'))
 
 		return cmd
+
+class GCCCompiler(Compiler):
+	__FORMAT_FLAG = '-%s'
+	__FORMAT_VALUE = '%s%s%s'
+
+	def __init__(self, target: Target):
+		super().__init__(target)
+		self.__defines: List[str] = []
+		self.__standard: str = None
+		self.__optimizations: List[str] = []
+		self.__warnings: List[str] = []
+		self.__sanitizers: List[str] = []
+		self.__sources: List[str] = []
+		self.__includes: List[str] = []
+		self.__libpaths: List[str] = []
+		self.__libs: List[str] = []
+		self.__initialize()
+
+	def __initialize(self):
+		# Check compiler compatibility.
+		if self.target() != Target.LINUX:
+			raise ValueError('GCC is available only on Linux')
+
+		# Set to GCC max warning level.
+		self.__warnings = ['Wall', 'Wextra', 'Wpedantic']
+
+	def use_profile(self, profile: Profile):
+		match profile:
+			case Profile.RELEASE:
+				# Generate optimized code.
+				self.__optimizations = ['O2']
+			case Profile.DEBUG:
+				# Generate code with debug information.
+				self.__optimizations = ['O0']
+			case _:
+				# Generate code with even more debug information.
+				self.__optimizations = ['O0', 'g']
+				# Set sanitizer.
+				if profile == Profile.ADDRESS_SANITIZED:
+					self.__sanitizers = ['address']
+				elif profile == Profile.LEAK_SANITIZED:
+					self.__sanitizers = ['leak']
+				elif profile == Profile.UNDEFINED_BEHAVIOR_SANITIZED:
+					self.__sanitizers = ['undefined']
+				elif profile == Profile.THREAD_SANITIZED:
+					self.__sanitizers = ['thread']
+				else:
+					raise ValueError('Unsupported sanitizer found')
+
+	def set_standard(self, std: STD):
+		self.__standard = std2str(std)
+
+	def add_source(self, filename: str):
+		if not os.path.exists(filename):
+			raise ValueError('File \"%s\" is not exists' % (filename))
+		self.__sources.append(filename)
+
+	def add_sources(self, filenames: List[str]):
+		for p in filenames:
+			self.add_source(p)
+
+	def add_include(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__includes.append(dirname)
+
+	def add_libpath(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__libpaths.append(dirname)
+
+	def as_dynamic(self):
+		raise NotImplementedError("Link libraries is not supported for GCC yet")
+
+	def link_library(self, libname: str):
+		self.__libs.append(libname)
+
+	def finalize(self, outname: str, cxx: bool) -> List[str]:
+		def fmt(flag: str, value: Optional[str] = None, sep: str = ' ') -> str:
+			prefix = self.__FORMAT_FLAG % (flag)
+			if value is None: return prefix
+			return self.__FORMAT_VALUE % (prefix, sep, value)
+
+		cmd: List[str] = []
+
+		if cxx: cmd = ['g++']
+		else: cmd = ['gcc']
+
+		for define in self.__defines:
+			cmd.append(fmt('D', define, ''))
+
+		if self.__standard:
+			cmd.append(fmt('std', self.__standard, '='))
+
+		for optimization in self.__optimizations:
+			cmd.append(fmt(optimization))
+
+		for warning in self.__warnings:
+			cmd.append(fmt(warning))
+
+		for sanitizer in self.__sanitizers:
+			cmd.append(fmt('fsanitize', sanitizer, '='))
+
+		for source in self.__sources:
+			cmd.append(source)
+
+		for include in self.__includes:
+			cmd.append(fmt('I', include))
+
+		for lib_path in self.__libpaths:
+			cmd.append(fmt('L', lib_path))
+
+		for lib in self.__libs:
+			cmd.append(fmt('l', lib, ''))
+
+		cmd.append(fmt('o', outname))
+
+		return cmd
+
+class MSVCCompiler(Compiler):
+	__FORMAT_FLAG = '/%s'
+	__FORMAT_VALUE = '%s%s%s'
+
+	def __init__(self, target: Target):
+		super().__init__(target)
+		self.__defines: List[str] = []
+		self.__standard: str = None
+		self.__optimizations: List[str] = []
+		self.__warnings: List[str] = []
+		self.__stdlib: List[str] = []
+		self.__sanitizers: List[str] = []
+		self.__sources: List[str] = []
+		self.__includes: List[str] = []
+		self.__dynamic: List[str] = []
+		self.__libpaths: List[str] = []
+		self.__libs: List[str] = []
+		self.__needs_debug = True
+		self.__initialize()
+
+	def __initialize(self):
+		# Check compiler compatibility.
+		if self.target() != Target.WINDOWS:
+			raise ValueError('MSVC is available only on Windows')
+
+		# No MSVC secure warnings.
+		self.__defines.append('_CRT_SECURE_NO_WARNINGS')
+
+		# Define math.
+		self.__defines.append('_USE_MATH_DEFINES')
+
+		# Set to MSVC max warning level.
+		self.__warnings.append('W4')
+
+	def use_profile(self, profile: Profile):
+		match profile:
+			case Profile.RELEASE:
+				# Generate optimized code.
+				self.__optimizations = ['O2']
+				# Use MSVC standard library. Default: use static
+				self.__stdlib = ['MT']
+				self.__needs_debug = False
+			case Profile.DEBUG:
+				# Generate code with debug information.
+				self.__optimizations = ['Od']
+				# Use MSVC standard library. Default: use static.
+				self.__stdlib = ['MTd']
+			case Profile.ADDRESS_SANITIZED:
+				# Generate code with even more debug information.
+				self.__optimizations = ['Od', 'Z7']
+				# Use MSVC standard library. Default: use static.
+				self.__stdlib = ['MTd']
+				# Turn off any strange CL's ASan behavior.
+				self.__defines.append('_DISABLE_VECTOR_ANNOTATION')
+				self.__defines.append('_DISABLE_STRING_ANNOTATION')
+				# Set sanitizer.
+				self.__sanitizers = ['address']
+			case _:
+				raise ValueError('On MSVC supported only Release, Debug and AddressSanitized profiles')
+
+	def set_standard(self, std: STD):
+		match std:
+			case STD.CC99:
+				raise ValueError('C99 is not supported by MSVC')
+			case x:
+				self.__standard = std2str(x)
+
+	def add_source(self, filename: str):
+		if not os.path.exists(filename):
+			raise ValueError('File \"%s\" is not exists' % (filename))
+		self.__sources.append(filename)
+
+	def add_sources(self, filenames: List[str]):
+		for p in filenames:
+			self.add_source(p)
+
+	def add_include(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__includes.append(dirname)
+
+	def add_libpath(self, dirname: str):
+		if not os.path.exists(dirname):
+			raise ValueError('Directory \"%s\" is not exists' % (dirname))
+		self.__libpaths.append(dirname)
+
+	def as_dynamic(self):
+		# All .lib will be threated as dynamic-base
+		self.__dynamic = ['DYNAMICBASE']
+		# Use MSVC standard library for dynamic.
+		if self.__needs_debug:
+			self.__stdlib = ['MDd']
+		else:
+			self.__stdlib = ['MD']
+
+	def link_library(self, libname: str):
+		self.__libs.append(libname)
+
+	def finalize(self, outname: str, _: bool) -> List[str]:
+		def fmt(flag: str, value: Optional[str] = None, sep: str = ' ') -> str:
+			prefix = self.__FORMAT_FLAG % (flag)
+			if value is None: return prefix
+			return self.__FORMAT_VALUE % (prefix, sep, value)
+
+		if len(self.__optimizations) == 0:
+			raise ValueError('Flag --use-profile is required')
+
+		cmd: List[str] = ['cl', fmt('EHsc')]
+
+		for define in self.__defines:
+			cmd.append(fmt('D', define))
+
+		if self.__standard:
+			cmd.append(fmt('std', self.__standard, ':'))
+
+		for optimization in self.__optimizations:
+			cmd.append(fmt(optimization))
+
+		for stdlib in self.__stdlib:
+			cmd.append(fmt(stdlib))
+
+		for warning in self.__warnings:
+			cmd.append(fmt(warning))
+
+		for sanitizer in self.__sanitizers:
+			cmd.append(fmt('fsanitize', sanitizer, '='))
+
+		for source in self.__sources:
+			cmd.append(source)
+
+		for include in self.__includes:
+			cmd.append(fmt('I', include + '/'))
+
+		cmd.append(fmt('link'))
+
+		for lib_path in self.__libpaths:
+			cmd.append(fmt('LIBPATH', lib_path + '/', ':'))
+
+		for d in self.__dynamic:
+			cmd.append(fmt(d))
+
+		for lib in self.__libs:
+			cmd.append(lib)
+
+		cmd.append(fmt('OUT', outname, ':'))
+
+		return cmd
+
+def str2compiler(s: str, t: Target) -> Compiler:
+	name = s.lower()
+	if name == 'clang':
+		return ClangCompiler(t)
+	elif name == 'gcc':
+		return GCCCompiler(t)
+	elif name == 'msvc':
+		return MSVCCompiler(t)
+	else:
+		raise ValueError('Unsupported compiler \"%s\" found' % (s))
+
+# Environment.
+
+EDU_PREFIX = 'EDUCONTAINER'
+
+def envname(name: str) -> str:
+	return "%s_%s" % (EDU_PREFIX, name.upper())
+
+def getenv(name: str) -> str:
+	name = envname(name)
+	print('Checking for %s...' % (name))
+	value = os.getenv(name)
+	if value is None:
+		raise ValueError('Environment variable \"%s\" must exist' % (name))
+	print('Checking for %s... done.' % (name))
+	return value
 
 # Compile script.
 
@@ -183,13 +638,13 @@ for d in [".", os.path.expanduser("~")]:
 		break
 
 if parent is None:
-	print("[WARN] No %s directory found, no libraries loaded." % (DIRNAME_COMPILE_CONFIGS))
+	print('[WARN] No \"%s\" directory found, no libraries loaded.' % (DIRNAME_COMPILE_CONFIGS))
 else:
 	for f in os.listdir(parent):
 		p = os.path.join(parent, f)
 		stream = open(p, "r")
 		lib = Library(yaml.safe_load(stream))
-		libs[lib.name()] = lib
+		libs[lib.get_name()] = lib
 
 ## Find sources.
 
@@ -209,94 +664,84 @@ for d in [".", "src"]:
 
 ## Build command.
 
-cc = CCBuilder(is_cxx)
+target: Target = str2target(getenv('target_system'))
+compiler: Compiler = str2compiler(getenv('target_name'), target)
+as_msvc_dynamic_base: List[str] = []
 
-def include_libraries(arr: List[str]):
-	global cc
+name_executable = None
 
+def include_libraries(cc: Compiler, arr: List[str]):
 	for a in arr:
 		if not a in libs:
-			raise ValueError("Library \"%s\" no found in loader" % (a))
+			raise ValueError('Library \"%s\" not found in loader' % (a))
+		cc.add_libpath(libs[a].get_library())
+		cc.add_include(libs[a].get_include())
 
-		cc.add_library(libs[a].librarydir())
-		cc.include_headers(libs[a].includedir(), True)
-
-def link_libraries(arr: List[str]):
-	global cc
-
+def link_libraries(cc: Compiler, arr: List[str]):
 	for a in arr:
 		cc.link_library(a)
 
-def build_type(arr: List[str]):
-	global cc
-
+def set_standard(cc: Compiler, arr: List[str]):
 	if len(arr) != 1:
-		raise ValueError("For build-type flag there's should be exactly one value")
+		raise ValueError('For using standard there\'s should be exactly one value')
+	cc.set_standard(str2std(arr[0]))
 
-	a = arr[0].lower()
-	if a == "release":
-		cc.set_release()
-	elif a == "debug":
-		cc.set_debug()
-	else:
-		raise ValueError("Unsupported build-type (\"%s\") found" % (a))
-
-def use_sanitizer(arr: List[str]):
-	global cc
-
+def use_profile(cc: Compiler, arr: List[str]):
 	if len(arr) != 1:
-		raise ValueError("For sanitizer there's should be exactly one value")
+		raise ValueError('For using profile there\'s should be exactly one value')
+	cc.use_profile(str2profile(arr[0]))
 
-	cc.set_sanitizer(arr[0])
-
-def set_name(arr: List[str]):
-	global cc
-
-	if len(arr) != 1:
-		raise ValueError("For executable name there's should be exactly one value")
-
-	cc.set_name_executable(arr[0])
-
-def set_standard(arr: List[str]):
-	global cc
-
-	if len(arr) != 1:
-		raise ValueError("For executable name there's should be exactly one value")
-
-	cc.set_standard(arr[0])
-
-def add_compile_flags(arr: List[str]):
-	global cc
-
+def as_dynamic(cc: Compiler, arr: List[str], dynamic_base: List[str]):
+	cc.as_dynamic()
 	for a in arr:
-		cc.add_compile_flag(a)
-
-def add_linkage_flags(arr: List[str]):
-	global cc
-
-	for a in arr:
-		cc.add_link_flag(a)
+		if not a in libs:
+			raise ValueError('Library \"%s\" not found in loader' % (a))
+		dynamic_base.append(libs[a].get_binary())
 
 for i in range(1, len(sys.argv)):
 	arg = CMDElement(sys.argv[i])
 	flag = arg.get_flag()
 	vals = arg.get_values()
 	match flag:
-		case "include-libraries": include_libraries(vals)
-		case "link-libraries": link_libraries(vals)
-		case "build-type": build_type(vals)
-		case "use-sanitizer": use_sanitizer(vals)
-		case "name": set_name(vals)
-		case "std": set_standard(vals)
-		case "add-compile-flags": add_compile_flags(vals)
-		case "add-linkage-flags": add_linkage_flags(vals)
+		case "name": name_executable = vals[0]
+		case "include-libraries": include_libraries(compiler, vals)
+		case "link-libraries": link_libraries(compiler, vals)
+		case "std": set_standard(compiler, vals)
+		case "use-profile": use_profile(compiler, vals)
+		case "as-dynamic": as_dynamic(compiler, vals, as_msvc_dynamic_base)
 		case _: raise NotImplementedError("Flag \"%s\" is not supported" % (flag))
 
-cc.add_sources(sources)
-if os.path.exists("include"):
-	cc.include_headers("include", False)
+compiler.add_sources(sources)
+if os.path.exists('include'):
+	compiler.add_include('include')
 
-## Run compilation.
+# FIXME: Looks like dirty...
+def compile_as_windows(command: List[str], dynamic: List[str]):
+	msvc = getenv('msvc_setup')
+	ERROR_BATCH = 'exit /b 666'
+	with open('compile.bat', 'w') as script:
+		current_working_directory = os.getcwd()
+		for d in dynamic:
+			if not os.path.exists(d):
+				raise FileNotFoundError('Provided path with binaries \"%s\" not found' % (d))
+			for f in os.listdir(d):
+				p = os.path.join(d, f)
+				if p.endswith(".dll"):
+					n = os.path.join(current_working_directory, f)
+					shutil.copyfile(p, n)
+		script.write('call \"%s\"\n%s || %s\n' % (msvc, ' '.join(command), ERROR_BATCH))
+	exit(subprocess.run(['compile.bat'], shell = True).returncode)
 
-print(" ".join(cc.get_command()))
-subprocess.run(cc.get_command())
+# FIXME: And this looks like dirty...
+def compile_as_linux(command: List[str]):
+	ERROR_BASH = 'exit 666'
+	with open('compile.bash', 'w') as script:
+		script.write('%s || %s\n' % (' '.join(command), ERROR_BASH))
+	exit(subprocess.run(['bash', 'compile.bash']).returncode)
+
+command = compiler.finalize(name_executable, is_cxx)
+print(' '.join(command))
+
+if target == Target.WINDOWS:
+	compile_as_windows(command, as_msvc_dynamic_base)
+compile_as_linux(command)
