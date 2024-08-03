@@ -11,7 +11,7 @@ Push-Location "${gtestSrc}";
 
 # Build and install GoogleTest.
 cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_GOOGLETEST";
-cmake --build . --target install --config Release;
+cmake --build . --target install --config "$env:EDUCONATINER_BUILDTYPE";
 
 # Go back.
 Pop-Location;

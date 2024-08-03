@@ -11,7 +11,7 @@ Push-Location "${libdeflateSrc}";
 
 # Build and install libdeflate.
 cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_LIBDEFLATE" -D ZLIB_ROOT="$env:EDUCONTAINER_ZLIB";
-cmake --build . --target install --config Release;
+cmake --build . --target install --config "$env:EDUCONATINER_BUILDTYPE";
 
 # Go back.
 Pop-Location;

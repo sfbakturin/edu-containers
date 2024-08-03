@@ -14,7 +14,7 @@ Push-Location "${fftwSrc}";
 
 # Build and install FFTW.
 cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_FFTW";
-cmake --build . --target install --config Release;
+cmake --build . --target install --config "$env:EDUCONATINER_BUILDTYPE";
 
 # Go back.
 Pop-Location;

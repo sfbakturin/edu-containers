@@ -474,6 +474,9 @@ class MSVCCompiler(Compiler):
 		# No MSVC secure warnings.
 		self.__defines.append('_CRT_SECURE_NO_WARNINGS')
 
+		# Define math.
+		self.__defines.append('_USE_MATH_DEFINES')
+
 		# Set to MSVC max warning level.
 		self.__warnings.append('W4')
 
@@ -488,15 +491,16 @@ class MSVCCompiler(Compiler):
 			case Profile.DEBUG:
 				# Generate code with debug information.
 				self.__optimizations = ['Od']
-				# Use MSVC standard library for debugging. Default: use static.
+				# Use MSVC standard library. Default: use static.
 				self.__stdlib = ['MTd']
 			case Profile.ADDRESS_SANITIZED:
 				# Generate code with even more debug information.
 				self.__optimizations = ['Od', 'Z7']
-				# Use MSVC standard library for debugging. Default: use static.
+				# Use MSVC standard library. Default: use static.
 				self.__stdlib = ['MTd']
 				# Turn off any strange CL's ASan behavior.
-				self.__defines = ['_DISABLE_VECTOR_ANNOTATION', '_DISABLE_STRING_ANNOTATION']
+				self.__defines.append('_DISABLE_VECTOR_ANNOTATION')
+				self.__defines.append('_DISABLE_STRING_ANNOTATION')
 				# Set sanitizer.
 				self.__sanitizers = ['address']
 			case _:
