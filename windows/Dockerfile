@@ -7,6 +7,7 @@ ENV EDUCONTAINER_THIRDPARTY='C:/thirdparty'
 ENV EDUCONTAINER_STUDENT='C:/student'
 ENV EDUCONTAINER_TARGET_SYSTEM=windows
 ENV EDUCONTAINER_TARGET_NAME=msvc
+ENV EDUCONTAINER_MSVC_SETUP='C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Auxiliary/Build/vcvars64.bat'
 
 # Enable detection of running in a container
 ENV COMPLUS_RUNNING_IN_CONTAINER=1
