@@ -3,6 +3,8 @@ $libdeflateVersion = 'v1.20'
 $libdeflateUrl = 'https://github.com/ebiggers/libdeflate'
 $libdeflateSrc = 'libdeflate-src'
 
+$libdeflateBuildType = $args[0]
+
 # Download libdeflate sources.
 git clone "${libdeflateUrl}" -b "${libdeflateVersion}" "${libdeflateSrc}";
 
@@ -11,7 +13,7 @@ Push-Location "${libdeflateSrc}";
 
 # Build and install libdeflate.
 cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_LIBDEFLATE" -D ZLIB_ROOT="$env:EDUCONTAINER_ZLIB";
-cmake --build . --target install --config "$env:EDUCONATINER_BUILDTYPE";
+cmake --build . --target install --config "$libdeflateBuildType";
 
 # Go back.
 Pop-Location;

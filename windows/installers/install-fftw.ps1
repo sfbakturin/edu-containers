@@ -4,6 +4,8 @@ $fftwSrc = "fftw-${fftwVersion}"
 $fftwArchive = "${fftwSrc}.tar.gz"
 $fftwUrl = "https://www.fftw.org/${fftwArchive}"
 
+$fftwBuildType = $args[0]
+
 # Download and extract FFTW sources.
 Invoke-WebRequest -Uri $fftwUrl -OutFile $fftwArchive;
 tar xzvf $fftwArchive;
@@ -14,7 +16,7 @@ Push-Location "${fftwSrc}";
 
 # Build and install FFTW.
 cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_FFTW";
-cmake --build . --target install --config "$env:EDUCONATINER_BUILDTYPE";
+cmake --build . --target install --config "$fftwBuildType";
 
 # Go back.
 Pop-Location;
