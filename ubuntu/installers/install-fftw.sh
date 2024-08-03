@@ -23,17 +23,11 @@ make -j"$(nproc --all)"
 # If BUILD_EXTRAS_RUN_TESTS == true, then we should test FFTW.
 if $BUILD_EXTRAS_RUN_TESTS
 then
-  ## Set working directory to FFTW tests.
-  pushd tests
-
   ## Test FFTW.
   ./bench --verify ib8192
   ./bench --speed ib8192
   ./bench --verify 512x1024
   ./bench --speed 512x1024
-
-  ## Go back.
-  popd
 fi
 
 # Install FFTW.
