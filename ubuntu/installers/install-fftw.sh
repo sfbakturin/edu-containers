@@ -17,7 +17,7 @@ rm "${FFTW_TAR}"
 pushd "${FFTW_SRC}"
 
 # Build FFTW.
-./configure --prefix="${EDUCONTAINER_FFTW}"
+cmake . -D CMAKE_INSTALL_PREFIX="${EDUCONTAINER_FFTW}" -D ENABLE_FLOAT=ON -D ENABLE_LONG_DOUBLE=ON -D ENABLE_QUAD_PRECISION=ON
 make -j"$(nproc --all)"
 
 # If BUILD_EXTRAS_RUN_TESTS == true, then we should test FFTW.

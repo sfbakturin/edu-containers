@@ -15,7 +15,7 @@ Remove-Item $fftwArchive;
 Push-Location "${fftwSrc}";
 
 # Build and install FFTW.
-cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_FFTW";
+cmake . -D CMAKE_INSTALL_PREFIX="$env:EDUCONTAINER_FFTW" -D ENABLE_FLOAT=ON -D ENABLE_LONG_DOUBLE=ON -D ENABLE_QUAD_PRECISION=ON;
 cmake --build . --target install --config "$fftwBuildType";
 
 # Go back.
